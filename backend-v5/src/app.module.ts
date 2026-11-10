@@ -1,4 +1,7 @@
 import { ContactsModule } from './contacts/contacts.module';
+import { agencyApplicationImports } from './agency-practices/http';
+import { giftApplicationImports } from './agency-practices/gift-http';
+import { documentAnalysisApplicationImports } from './agency-document-analysis/module';
 import { ObjectOnboardingModule } from './object-onboarding/onboarding.module';
 import { Global, Module } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
@@ -17,5 +20,5 @@ import { ReceiptAssistanceModule } from './receipt-assistance/receipt.module';
 import { DocumentIntakeModule } from './document-intake/intake.module';
 @Global() @Module({ providers: [PrismaService, SessionsService], exports: [PrismaService, SessionsService] })
 export class InfrastructureModule {}
-@Module({ imports: [ContactsModule, ObjectOnboardingModule, InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, HomeHistoryModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule, DocumentIntakeModule] })
+@Module({ imports: [...agencyApplicationImports(), ...giftApplicationImports(), ...documentAnalysisApplicationImports(), ContactsModule, ObjectOnboardingModule, InfrastructureModule, AuthModule, HomesModule, DocumentsModule, ReviewModule, ActivitiesModule, HomeHistoryModule, ExpensesModule, HomeObjectsModule, SharingModule, PersonalExportModule, ReceiptAssistanceModule, DocumentIntakeModule] })
 export class AppModule {}

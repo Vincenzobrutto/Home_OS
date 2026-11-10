@@ -71,6 +71,7 @@ export function AppShell(props: { account: Account; home?: Home; children: React
           Dimora<span>.</span>
         </Link>
         <div className={styles.account}>
+          <Link to="/agenzie" aria-label="Area Agenzie" className={styles.logout}><Icon name="document"/><span className={styles.logoutLabel}>Agenzie</span></Link>
           {/* Documenti ricevuti: livello account, raggiungibile anche senza case; non è una sezione della casa. */}
           <Link to="/consegne" className={styles.logout}>
             <Icon name="document" />

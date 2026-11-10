@@ -1306,3 +1306,172 @@ Il committente chiarisce che mese di riferimento significa mese esplicito della 
 ## 25 ottobre 2026 — nome visuale delle bollette completate
 
 Su richiesta del committente, mostrare un nome leggibile usando soltanto fornitore e mese della fattura già confermati, nei soli documenti completati. Implementazione come alias visuale quando il titolo è ancora il filename/stem, non rinomina persistente: titoli personalizzati e originali preservati. Una sola parte bolletta e una sola spesa personale attiva, altrimenti fallback; mai dedurre il mese da servizi, emissione o scadenza. Ricerca/export restano canonici; non introdurre backfill o letture per riga. [Report](v5/documenti-titoli-completati-20261025.md).
+
+## 2026-10-30 — Dati incarico prima del modello
+
+Il pacchetto dati per il futuro incarico e una selezione esplicita e autorizzata di fatti confermati, non una certificazione o generazione di contratto. In assenza di modello e mapping approvati dall'agenzia, canGenerateDraft resta false, anche senza campi mancanti. Dati dichiarati mantengono tale origine; successione, titolarita e difformita non sono inferite dalla selezione. La funzione pura iniziale non valuta completezza o finding e lo espone esplicitamente. Decisione tecnica implementata; requisiti dell'agenzia ancora da validare. Report v5/agency-mandate-packet-v1.md.
+
+## 2026-10-30 — Le citazioni degli atti verificano presenza, non significato
+
+Il nuovo adapter offline confronta citazione e valore letterali con testo pagina ottenuto da una porta server fidata. Il risultato resta proposta non associata a persone/unita della pratica: lexicalEvidenceVerified non implica semanticEvidenceVerified, titolarita attuale o dato confermato. Nessun ruolo current_owner del modello e nessuna conversione data/identita impliciti. Parser reale e binding umano sono task separati; nessuna AI reale autorizzata da questo contratto. Report v5/agency-deed-extraction-contract-v1.md.
+
+## 2026-10-30 — Decoder atti locale, separato da estrazione AI
+
+Il testo fidato per gli atti proviene dai byte verificati nello storage Agenzie e dal parser PDF locale esistente, senza snapshot Home o provider inventati. Doppia lettura autorizzata prima/dopo processo, scope/prova catturati e copie dei byte; revoca o nuova versione scartano il testo. Nessun OCR implicito per scansioni o pagine vuote, nessuna persistenza o nuova route nell'incremento. Report v5/agency-deed-decoder-v1.md; continuita in v5/agency-day-worklog-20261030.md per evitare sovrapposizione al registro concorrente.
+
+## 2026-10-30 — Decisioni dati soltanto dopo risposta server
+
+La nuova UI Agenzie non conferma all'apertura o prima della risposta. Retry incerto mantiene payload/key identici e richiede azione esplicita; conflitto impone reload e403nasconde valori/prove. Scope e porta API sono parte della proprieta della vista, con generazione delle risposte asincrone. Citazioni come testo, apertura originali via callback autorizzato del contenitore. Componente/client indipendenti dal router, nessun fallback sintetico nel prodotto. Report v5/agency-review-ui-v1.md.
+
+## 2026-10-30 — Una verifica non certifica e una prova tecnica va selezionata
+
+UI findings distingue aperto/verifica registrata/da rivedere, senza conformita o titolarita automatiche. Motivazione sempre necessaria; documento tecnico ricevuto richiede riferimento corrente selezionato (massimo5), fingerprint/CAS server. Nuove note manuali per unita/tipo espliciti, default privata. Payload clonato prima dell'async e retry con stessa key, mai reinterpretato da props mutate. Contenitore fornisce solo prove/labels autorizzate; UI non inventa fonti. Report v5/agency-findings-ui-v1.md.
+
+## 2026-10-30 — Associare un candidato non equivale a confermare un dato
+
+Record atti immutabili e fonte/versione/fingerprint separati dai fatti. Solo scelta umana esplicita di unita/subjectKey e riconoscimento ruolo documentale crea un nuovo fatto ancora proposto; niente override valore o identita/diritto inferiti. Visibilita del record ereditata senza ampliamento, fonte privata sempre prevalente. Record superati non riattivati da replay, input TrustedDeedText solo server e nessuna route in questo incremento. Report v5/agency-deed-records-domain-v1.md.
+
+## 2026-10-30 — Commit atomico di proposte e associazioni
+
+Store atti riusa lock e contesto AgencyPractice esistenti, persiste risultato/link/fatto/receipt con CAS e restituisce soltanto viste filtrate. Decoder fuori dalla transazione, nuova autorizzazione e fonte corrente allo stage: un cambiamento fra le fasi scarta il testo. Nessun parametro TrustedDeedText da HTTP e nessuna nuova tabella o route nell'incremento. Record condiviso non prevale sul file privato. Report v5/agency-deed-persistence-v1.md.
+
+## 2026-10-30 — Recupero manuale dei vani senza duplicazione della superficie
+
+Uno spazio semantico non coincide sempre con un componente bianco connesso: i passaggi omessi/accorpati devono emergere come verifica, non essere occultati. Nuovo vano distinto oppure intersezione/sottrazione dal parent con area conservata e anteprima non persistente; altre geometrie e perimetro preservati. Provenienza manuale esplicita, nessun seed AI fabbricato, computo invalidato. Risultati disconnessi rifiutati anziché perdere isole. Efficacia dei nuovi prompt non ancora misurata con AI reale. Report [vani manuali](v5/agency-manual-rooms-20261030.md).
+
+## 2026-10-30 — La separazione deve valere sui poligoni, non solo sui pixel
+
+Controllo finale dopo semplificazione e seconda guardia alla registrazione. Se due bordi confliggono, ridurre soltanto la loro semplificazione ripartendo dai pixel originali; non inventare un separatore o spostare i vani estranei. Conflitto residuo rifiutato. Metadati indicano tolleranza effettiva; edit manuale cancella provenienza automatica, diagnosi dell'analisi rimane storica e scoped per fonte. Chiusura globale dei tratti e riduzione indiscriminata della soglia minima non promosse dai soli conteggi di regioni. [Report](v5/agency-boundary-cleanup-20261030.md).
+
+## 2026-10-30 — Pertinenza separata e barriera tecnica non sono proprietà o muri confermati
+
+Etichetta esplicita di accessorio consente recupero di un contorno candidato da inventario escluso, preservando l'esclusione grezza e richiedendo associazione umana; comuni/altra unità, negazioni e ambiguità non recuperati automaticamente. BOX isolato rimane ambiguo. Una soglia modifica solo una copia temporanea selezionata, non l'originale né una dichiarazione di muro. Freccia richiede contesto e appoggi ai muri: il rilevatore geometrico non riconosce il glifo. Nessuna promozione dal solo incremento del numero di contorni. [Regole e limiti](v5/agency-annex-threshold-rules-20261030.md).
+
+## 2026-10-30 — Un segno interno non equivale a superficie esclusa
+
+Arco sostituito solo nella catena ancorata; annotazioni interne non erodono un involucro selezionato. Vuoti espliciti preservati, simboli incerti ancora aperti. Anteprima distinta dai risultati AI, senza seed/componenti inventati o salvataggio automatico. [Report](v5/agency-room-surfaces-20261030.md).
+
+## 2026-10-30 — Evidenza visiva guida, pixel verificano, recupero resta proposto
+
+La freccia non basta: osservazione visiva più appoggi murari e stipiti verificati. Recupero su copia solo con conservazione geometrie preesistenti/esclusioni e guardia overlap. Censimento e componente continua distinti; soglie ed esito persistiti scoped, nessuna conferma automatica o terza chiamata AI. [Report](v5/agency-opening-recovery-20261030.md).
+
+## 2026-10-30 — Isolare una componente non prova la soglia corretta
+
+Fallback locale solo da indizio visivo, con assi murari dominanti e stipiti verificati, preservazione vani/esclusioni ed un'unica alternativa valida. Più soluzioni o limite raggiunto restano ambigui. Crop dalla propostaAI e mappe origine/scala, nessuna coordinata gold nel prompt. Censimento e componente continua restano distinti. [Report](v5/agency-focus-local-recovery-20261030.md).
+
+## 2026-10-30 — Arco, cerniera e muri prima di riallocare una superficie
+
+Una cavita curva non basta: fitcircolare, cerniera vicina e continuazioni murarie allineate prima di sostituire la sola catena. Sanitari non delimitano automaticamente una stanza; selezione involucri su evidenze e revisioni obbligatorie. La preview non conferma superfici e non sostituisce l'accettazione scoped ancora da integrare. [Report](v5/agency-door-service-surfaces-20261030.md).
+
+## 2026-10-30 — Adottare una proposta geometrica non conferma il computo
+
+Pacchetto server distinto e digest canonico su fonte/fingerprint/base geometrica; client invia soltanto digest/revisioni/motivo. Adozione atomica mantiene storico/perimetro e invalida computo, lasciando verifiche aperte. Correzione manuale cancella provenienza automatica del contorno modificato. JSONB riordina chiavi: canonizzare ricorsivamente oggetti, preservare array. Nessun nuovo schema o route. [Contratto e verifica](v5/agency-surface-integration-20261030.md).
+
+## 2026-10-30 — Una calibrazione ottica è una proposta, non un cambio silenzioso del profilo
+
+Se la scansione pallida non produce regioni, istogramma locale suggerisce soglia candidata senza massimizzare il numero di vani. Originale/profilo canonico invariati, seed esclusi non inglobati, metadato incluso nel digest e contrast_requires_review prima dell'adozione. Aperture incerte conservate. [Evidenza e limiti](v5/agency-third-plan-contrast-20261030.md).
+
+### Agenzie — presentare due basi senza ricomputare nel client, 30 ottobre 2026
+
+Vani e perimetro commerciale rimangono viste della stessa fonte ma geometrie distinte. Il riepilogo usa soltanto il report autorizzato del server: netto per vano, base principale raggruppata, pertinenze e rettifiche dei muri. Nessun totale da somma di pixel nel browser; parziale non equivale a totale. Associazione delle pertinenze dalla configurazione salvata, non dal nome; le loro correzioni usano rooms anche nella vista commerciale. Misure sospese durante modifiche o revisione geometrica diversa. [Verifiche e limiti](v5/agency-dual-view-summary-20261030.md).
+
+### Agenzie — A4 predefinito come ipotesi tracciata, 30 ottobre 2026
+
+Su indicazione del committente il formato iniziale è A4, modificabile. La sola scala stampata con un'immagine non fornisce dimensioni assolute: si assume il foglio intero, si controllano proporzioni e si conserva provenienza paper, senza dichiararla scala verificata. Nessuna correzione prospettica implicita; ritagli compatibili col formato rimangono possibili. Superfici stimate disponibili, totale verificato sospeso fino a riferimento metrico. [Implementazione](v5/agency-paper-calibration-20261030.md).
+
+### Agenzie — geometrie senza assegnazione non equivalgono a stanze confermate, 31 ottobre 2026
+
+La copertura dipende dalle componenti effettivamente ricostruite, non dal solo elenco o dalle alternative dei semi AI. Il motore propone regioni chiuse plausibili con seed dai pixel, senza inferire proprietà/destinazione o modificare i vani canonici. Rapporto complete:false e adozione esplicita con verifiche ancora aperte; diagnostica/immagini entrano nella revisione esistente. L'inviluppo convesso e i vicini sono euristiche geometriche, non perimetro legale o prova di esaustività. [Implementazione e limiti](v5/agency-unassigned-areas-20261031.md).
+
+### 31/10/2026 — Fasce murarie come indizio, scelta umana per candidata
+Non eliminare automaticamente componenti sottili: possono essere passaggi reali. Segnalazione relativa alla geometria, tutte incluse inizialmente, scarto esplicito limitato alle nuove candidate firmate, audit e proposta originale preservati. Nessuna rimozione di vani canonici attraverso l'adozione. [Report](v5/agency-candidate-selection-20261031.md).
+
+## 31 ottobre 2026 — Agenzie come modulo integrato, rami brevi
+
+Il committente approva integrazione dell'intera PR71nel ramo comune codex/dimora-v5-consolidata-20261023, senza deploy o modifica main. Agenzie mantiene scope/ruoli/workflow distinti ma riusa infrastruttura V5; i futuri incrementi partono dalla base comune aggiornata e confluiscono frequentemente dopo verifica. Integrazione codice, configurazione/abilitazione e rilascio sono passaggi separati; nessuna attivazione implicita di provider, budget, storage o migrazioni prodotto. La demo pubblica di Alessio resta indipendente. Modello incarico approvato assente: la nuova analisi/catalogo negli outputs non costituisce generazione contrattuale implementata. [Report](v5/agency-consolidation-20261031.md).
+
+## 31 ottobre2026 — pacchetto Gift interno
+
+Gift accettata indipendente resta la decisione ADR-V5-04. La prima implementazione prepara soltanto una selezione interna da fonti correnti autorizzate,con descrittori di produttore da registro server ancora da collegare. Non confondere fingerprint deterministico con ricevuta/idempotenza durevole di consegna. Nessuna route pubblica,scrittura Home,proprietà confermata o firma validata dal pacchetto. [Contratto e limiti](v5/agency-gift-contract-20261031.md).
+
+Gift v1,singolo account e anno opzionale:decisione del committente31ottobre2026,vedi [ADR V5](v5/implementation-decisions.md) e [contratto](v5/agency-gift-home-copy-contract-20261031.md).Supera le ipotesi multi-destinatario della prima preparazione interna.
+
+## Gift v1 — prenotazione e anniversario UTC,31 ottobre2026
+
+Scelta tecnica:prenotazione durevole per pratica prima di qualsiasi copia,con ID server e nessuna Home parziale;job e manifesto potranno essere ripuliti dopo la futura ricevuta per non duplicare i metadati eliminati dal proprietario.Get espone solo progresso all'account associato,senza dipendere dall'export Agency per questa vista minima.Claim/begin non equivalgono ad accettazione.
+
+Anno completo approvato dal committente:12mesi di calendario UTC dall'accettazione,29febbraio→28febbraio allo stesso orario,intervallo[inizio,fine).L'helper è verificato,ma attivazione/persistenza del diritto restano nel prossimo copier.Nessun rinnovo,pagamento o mutazione di abbonamenti già presenti.[Report](v5/agency-gift-acceptance-reservation-20261031.md).
+## Gift v1 — accettazione indipendente e diritto sull'account, 31 ottobre2026
+
+Il commit di pubblicazione comprende Home, documenti, ricevuta e anno opzionale; il claim o la prenotazione non attivano nulla. La ricevuta è letta prima di invito/token/Agency e non richiede che esistano ancora i singoli documenti: il purge resta definitivo. La vista della ricevuta richiede l'account destinatario e accesso corrente alla Home; il diritto annuale è invece dell'account e non dipende dalla successiva membership Home o dai permessi Agency. Questo non concede accessi ai dati e non definisce il piano free.
+
+Staging e pubblicazione usano storage indipendenti e IO/scanner fuori SQL. Fencing, riserva StoredFile e lettura della ricevuta gestiscono processi concorrenti e commit dall'esito perso senza cancellare copie già pubblicate. Backend verificato con fixture; API/poller/UI ancora assenti. [Report](v5/agency-gift-copier-20261031.md).
+## Gift v1 — rilascio esplicito e modulo letture indipendente,1 novembre2026
+
+L'agente può rendere eleggibile un file già caricato con conferme esplicite, revisione e prova fonte correnti. Il server deriva scope/attore/versione/autore non verificato o produzione dichiarata; sul medesimo originale conserva metadati e qualifiche del producer. Nessun campo client può attestare autore/firma/superficie. Questo rende consegnabili documenti ricevuti senza inventare un modello incarico.
+
+Ingresso nuove Gift e poller sono abilitati soltanto da configurazione esplicita; il modulo account di letture/ripresa/beneficio non dipende da quella configurazione o dal vault Agency. Le nuove API si appoggiano alla sessione normale. La verifica email frontend non presume un account diverso dal token: invia e rispetta l'esito server; reset e prove backend invariati. [Contratto](v5/agency-gift-api-20261031.md).
+## 1 novembre 2026 — Gift: continuità di accesso e recupero del link
+
+Il segreto personale vive solo in memoria sopra il router autenticato; guest→primo accesso lo conserva, cambio di account/logout lo cancella. Il ritorno da accesso/registrazione è soltanto il path Gift canonico e senza query/frammenti; il matching reale riconosce anche path codificati per rimuovere le credenziali. Dopo begin la ripresa usa il lavoro autenticato e non richiede il segreto. Verifica email normale, nessuna attivazione Home/anno da claim o da bozza.
+
+La rigenerazione sostituisce il vecchio invito atomicamente mantenendo selezione/destinatario/offerta, con una nuova finestra7giorni; le prenotazioni attive la bloccano finché il proprietario non annulla. Replay hash-only senza recuperare il segreto. Nessuna rigenerazione dopo accettazione. Contatori Gift persistenti e pseudonimi sono distinti dai futuri limiti free. [Implementazione e prove](v5/agency-gift-app-20261101.md).
+
+
+## ADR-V5 — Planimetria Gift indipendente e pin proprietario (1 novembre2026)
+Accettata nello sviluppo del lotto gift-plan-handoff. Una mappa canonica revisionata per Gift v1; selezione esplicita dell’agente e normale accettazione proprietario. Proposte AI pendenti non si trasferiscono. Pubblicazione atomica di documenti, ambienti e copia modificabile della mappa; received immutabile separato dal layout corrente. Nessun grant Agency né dipendenza dall’anno opzionale, nessuna seconda analisi AI. Segnaposto proprietario e collocazione oggetto sono un unico aggiornamento con versioni; geometria cambiata invalida misure e richiede riconferma dei pin senza spostarli. Originale cestinato/sostituito non autorizza sovrapposizioni nuove. [Dettagli](v5/gift-digital-plan-20261101.md).
+
+## ADR-V5 — Ambienti, disposizione indicativa e collocazione esplicita (1 novembre2026)
+Vista Schede predefinita e Planimetria integrata nella stessa pagina. Un oggetto con ambiente canonico ma senza coordinate riceve soltanto un segnaposto indicativo in lettura, tratteggiato; nessuna posizione fisica o stanza è inferita e persistita. Il trascinamento è una scelta esplicita: coordinate e singolo ambiente di arrivo aggiornati atomicamente dal POST pins già esistente, con versioni e replay. Se più ambienti erano associati, la scelta li sostituisce: avviso visibile, nessuna copia dell’oggetto. Drop su aree nascoste, muri/vuoti, dati mutati o esito incerto non genera nuove scritture automatiche. Mappa/documenti ereditano l’indipendenza Gift/Home già stabilita; niente nuova AI o vincolo annuale. [Report](v5/ambienti-map-drag-20261101.md).
+
+## ADR-V5 — Gift: un'azione dalla pratica conclusa (3 novembre 2026)
+
+La Gift si prepara dopo la stipula, con i documenti conclusivi già nella pratica. L'agente sceglie file, mappa eventualmente inclusa, destinatario e anno opzionale; Crea link Gift esprime la consegna dei selezionati. Nessun nuovo editor o conferma per ogni documento. I descrittori finali già presenti vengono riusati; per i file selezionati che ne sono privi, il controller completa il rilascio tramite le API esistenti prima dell'invito, senza inventare autore, firma, certificazione o nuova geometria. Provenienza e caveat del producer restano invariati. Una copia è fissata per il destinatario; il caso normale non prevede cambiamenti ai documenti.
+
+Journal solo in memoria, scope account/agenzia/pratica, richieste con chiave e corpo congelati; dopo esito incerto lettura e ripresa manuale dello stesso passo, nessun retry con nuova chiave. Preparazione metadati sequenziale, non transazione batch; nessun invito finché tutti i selezionati non sono pronti. Pubblicazione atomica Home/receipt/anno invariata. Eccezioni bozze/stale/proposte pendenti rimangono circoscritte. [Implementazione e prove](v5/gift-simple-delivery-20261103.md).
+## ADR-V5 — classificazione Agenzie ricevuta con Gift (3 novembre 2026)
+
+Le nuove consegne fissano Source.kind già dichiarato nel fascicolo sotto classificationPolicyVersion1, insieme a fonte/versione/SHA e fingerprint/seal. Nessun filename o risultato AI viene usato per indovinare il tipo. La policy raggruppa atto/successione in Proprietà, documenti catastali/planimetria in Catasto e pratiche edilizie, APE in Energia; un tipo canonico Home è assegnato solo per floor_plan e ape. Unclassified/other restano tali. Questo è ordinamento, non accertamento di contenuti, conformità, provenienza giuridica o completezza.
+
+Il copier pubblica organizzazione personale e provenienza nella stessa transazione di Home/documenti/receipt/anno. DocumentOrganization.classificationOrigin distingue agency_gift da user_declared. La catalogazione ricevuta non completa da sola il lavoro personale; un'organizzazione esplicitamente salvata dal proprietario diventa user_declared anche se le parti sono identiche. Il solo cambio famiglia preserva l'origine. Fonte/versione/SHA e account continuano a limitare l'organizzazione corrente.
+
+La policy entra nell'impronta anche per tipi non mappati, così una riclassificazione pendente non viene assorbita silenziosamente. Inviti legacy e relativa rigenerazione usano la policy originale assente, senza backfill; i documenti già ricevuti non vengono modificati. Nuova colonna additiva con default user_declared e constraint dei due valori. Serve rilascio coordinato migrazione/backend/frontend; questo lotto integra solo codice e non migra servizi esistenti. [Report](v5/gift-consolidation-20261103.md).
+
+## ADR-V5 — Importazione tecnica di una mappa nella casa esistente (3 novembre 2026)
+
+Decisione: la casa già popolata riceve una mappa mediante un importatore interno distinto dalla pubblicazione Gift. Ogni regione deve essere collegata esplicitamente a una stanza attiva della stessa casa o a una creazione dichiarata; nessuna corrispondenza fuzzy, rinomina o modifica implicita a oggetti e collocazioni. Nessuna sostituzione di mappe già presenti per il documento. Owner, account atteso, fonte leggibile e byte fisici/versione/impronta restano obbligatori anche nel replay.
+
+Anteprima deterministica e fingerprint del contesto precedono l'applicazione. Lock canonici, mappa, eventuali stanze nuove, audit ObjectEvent e ricevuta ObjectRequest sono nella stessa transazione. Il manifesto tecnico include motivo e provenienza della ricostruzione; non fabbrica una Gift o una revisione dell'agenzia. La qualifica resta unverified con calibrazione e perimetro nulli: una barra metrica storica non basta a dichiarare revisionati i contorni. Gli ID di regione riservati vengono rifiutati prima del DB perché non sono conservati in modo affidabile dalla serializzazione JSON.
+
+L'intervento locale reale è autorizzato sul target identificato dal proprietario e richiede backup e verifica del delta. Non è un test sui dati reali: tutte le prove di errore/rollback usano cluster sintetici nuovi. Le migrazioni già applicate non vengono riscritte; terminatori misti sono riconosciuti mediante copie storiche con impronte esatte e identità SQL, senza reset dei metadati. Nessun nuovo endpoint/schema proprio o invio AI/email. [Implementazione e stato della verifica UI](v5/home-plan-backoffice-20261103.md).
+
+Durante l'intervento e il collaudo locale si usa una modalità manuale con worker, coda locale e pulizie sospesi; le normali operazioni della casa mantengono autenticazione e CSRF. L'avvio tecnico verificato non equivale a collaudo della vista privata: l'accesso deve avvenire normalmente con il proprietario, senza fabbricare sessioni per superare un login scaduto. Eventuali sessioni ospiti create dalle letture vengono conteggiate separatamente dalle righe precedenti preservate.
+
+Il collaudo desktop reale ha poi confermato la separazione fra oggetti disponibili e segnaposti: cinque attivi nel modello, quattro indicativi nelle stanze già associate e uno senza stanza lasciato Da collocare. L'importazione non assegna una stanza o coordinate per completare la rappresentazione; l'archiviato resta escluso. Accesso normale e ricarica verificati non sono una prova di trascinamento reale o di nuovo collaudo mobile.
+
+## ADR-AGENCY-DOCUMENT-20261103 — Analisi documentale distinta e riprendibile senza reinvii incerti
+
+Decisione: costruire il collegamento nativo atto/successione/visura sul decoder testuale e sulla revisione esistenti, con budget DOCUMENT_EXTRACT, offerte immutabili e consenso prima del primo trasferimento (anche conteggio). Nessun modello/prezzo implicito, quota storica o fixture attivabile dal browser/configurazione runtime. Il provider propone solo campi e citazioni; proof e validazione sono server-side.
+
+Marker durevole prima di ogni fase, lease/epoch e digest del payload di conteggio riconfrontato prima della generazione ripresa. Esiti incerti mantengono la prenotazione e non autorizzano retry; una risposta tardiva può aggiornare il costo ma non riaprire la quarantena. Una variazione nota prima della generazione chiude senza trasferimento, conserva il costo del conteggio e libera soltanto quota inutilizzata. Revoca/configurazione ritirata dopo invio: contabilità nota conservata, contenuto non pubblicato.
+
+PDF con pagine senza testo sono esplicitamente indisponibili, senza OCR improvvisato. Visura non produce data dell'atto né proprietario attuale dal ruolo storico. Interfaccia recuperabile con soli riferimenti tecnici scoped, GET di riconciliazione e purge al logout; proposte/binding/conferma esistenti preservati. Modello incarico approvato ancora assente, canGenerateDraft resta false. [Report e limiti](v5/agency-document-analysis-20261103.md).
+
+## ADR-AGENCY-REVIEW-20261103 — Continuità della revisione e pagina della prova
+
+Una modifica riconosciuta aggiorna i pannelli collegati mediante un segnale di rilettura e soli GET autorizzati. Il segnale non ripete mutazioni, associazioni o avvii AI. Scope e identità delle porte restano stabili per account/agenzia/pratica: una revisione nuova non rimonta il workspace e non scarta silenziosamente la bozza locale. Un pannello occupato da scrittura, esito incerto, selezione o modifica non salvata differisce la rilettura e mostra che esistono aggiornamenti. Il controllo della revisione sul server continua a rifiutare un invio obsoleto; conservare una bozza non autorizza a salvarla contro dati nuovi.
+
+Apri fonte usa documento/versione/SHA della citazione attraverso le letture esistenti autorizzate. La finestra mostra la pagina fisica citata e il testo riportato, con identità dei byte verificata e possibilità di confronto fra fonti. Non esistendo coordinate di evidenza affidabili, non si disegnano rettangoli o evidenziazioni che fingano una localizzazione del testo. Lo scope del riferimento controlla riaperture e chiusure; tastiera, focus iniziale visibile e ritorno al controllo di origine fanno parte del comportamento richiesto.
+
+Il ruolo proposto viene denominato ruolo nel documento, anche per successioni e persone storiche: non identifica un venditore o conferente attuale. Associazione umana e decisione sul fatto restano azioni separate; trovare e confermare una citazione non certifica identità, titolarità, completezza o conformità. La selezione per il futuro incarico conserva solo dati confermati e non sblocca la generazione senza modello e mapping approvati. [Candidato e verifiche distinte](v5/agency-documents-integration-20261103.md).
+
+
+## Agenzie — percorso operativo da incarico già acquisito (5 novembre 2026)
+
+L’agente entra dopo aver ottenuto l’incarico. La nuova pratica può partire dal PDF firmato, ma la lettura locale propone e l’agente conferma prima della creazione; non genera un nuovo contratto. Il profilo confermato in questa apertura è metadato dichiarato della pratica, distinto dai fatti citati/confermati del registro. La fonte deve essere condivisa nella pratica per evitare propagazione da originali privati. Checklist/situazioni e fase dichiarata restano metadati operativi con revisione e ricevute nello snapshot, senza schema nuovo.
+
+Fascicolo, Analisi, Planimetria, Annuncio, Trattativa e Stipula sono aree distinte. Il prossimo passo non inventa scadenze o «da fare oggi»; deriva dalla fase dichiarata e dallo stato della mappa. Gift compare nella Stipula conclusa e rimane un passaggio separato. Un acquisto dimostrativo non crea documenti ricevuti: finché non c’è il file si conserva soltanto la richiesta simulata. [Report e perimetro](v5/agency-journey-20261105.md).
+
+## Agenzie — stima rapida distinta dal computo salvato (5 novembre 2026)
+
+Per visualizzare le superfici non sono obbligatori conferme tecniche o configurazioni complete. La barra deve essere corroborata da testo e pixel; scala stampata e formato del foglio intero sono l’alternativa. Nessun formato assunto per default. La commerciale rapida è proposta dei soli vani disegnati, con coefficienti e maggiorazione muri espliciti modificabili: non si inventa un perimetro lordo. Questa stima locale non promuove fatti, Gift o annuncio e non modifica il computo rigoroso salvato. La persistenza di una stima marcata come tale resta un incremento distinto. [Report](v5/agency-quick-surfaces-20261105.md).

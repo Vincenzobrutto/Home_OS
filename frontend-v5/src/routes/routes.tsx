@@ -26,6 +26,7 @@ const FromDocumentPage = lazyPage(() => import('./DocumentDraftPages').then((m) 
 const AnalysisJobPage = lazyPage(() => import('./DocumentDraftPages').then((m) => m.AnalysisJobPage));
 const DraftsPage = lazyPage(() => import('./DocumentDraftPages').then((m) => m.DraftsPage));
 const DraftPage = lazyPage(() => import('./DocumentDraftPages').then((m) => m.DraftPage));
+const MapPage = lazyPage(() => import('../home-maps/MapPage').then(m => m.MapPage));
 const FloorPlanPage = lazyPage(() => import('../floor-plan/FloorPlanPage').then(m => m.FloorPlanPage));
 const RoomsPage = lazyPage(() => import('./RoomsPages').then((m) => m.RoomsPage));
 const RoomDetailPage = lazyPage(() => import('./RoomsPages').then((m) => m.RoomDetailPage));
@@ -41,9 +42,14 @@ const ReceivedDetailPage = lazyPage(() => import('./ReceivedPages').then((m) => 
 const RecoveryRequestPage = lazyPage(() => import('./RecoveryPages').then((m) => m.RecoveryRequestPage));
 const RecoveryLinkPage = lazyPage(() => import('./RecoveryPages').then((m) => m.RecoveryLinkPage));
 const VerificationLinkPage = lazyPage(() => import('./RecoveryPages').then((m) => m.VerificationLinkPage));
+const GiftLinkPage = lazyPage(() => import('../agency-gift/GiftLinkPage').then(m=>m.GiftLinkPage));
+const AgenciesPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgenciesPage));
+const AgencyPracticesPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyPracticesPage));
+const AgencyDeliveryPage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyDeliveryPage));
+const AgencyPracticePage = lazyPage(() => import('../agency-plans/AgencyPages').then(m=>m.AgencyPracticePage));
 
 // Mappa delle rotte V5: identity-v1.1, documents-v1 (M2), review-v1 (M3/M4, caso Caldaia), activities-v1 (H1), expenses-v1 (H3a), home-objects-v1 (G1), economy-v1 (S1a/b, con ripiego H3a).
-// Agenzie e Amministratori non hanno rotte: non sono ancora assegnate.
+// Agenzie usa scope separati dalle case; la configurazione API resta esplicita.
 export const routes: RouteObject[] = [
   {
     element: <RootLayout />,
@@ -51,6 +57,7 @@ export const routes: RouteObject[] = [
       { path:'recupera-accesso',element:<RecoveryRequestPage /> },
       { path:'recupera-password',element:<RecoveryLinkPage /> },
       { path:'verifica-email',element:<VerificationLinkPage /> },
+      { path:'gift/:invitationId',element:<GiftLinkPage /> },
       {
         element: <AnonymousOnly />,
         children: [
@@ -65,6 +72,10 @@ export const routes: RouteObject[] = [
           { index: true, element: <HomeEntry /> },
           { path: 'case', element: <HomesPage /> },
           { path: 'case/nuova', element: <CreateHomePage /> },
+          { path:'agenzie',element:<AgenciesPage/> },
+          { path:'agenzie/:agencyId',element:<AgencyPracticesPage/> },
+          { path:'agenzie/:agencyId/pratiche/:practiceId',element:<AgencyPracticePage/> },
+          { path:'agenzie/:agencyId/pratiche/:practiceId/consegna',element:<AgencyDeliveryPage/> },
           // sharing-v1: consegne ricevute a livello account, anche senza case.
           { path: 'consegne', element: <ReceivedListPage /> },
           { path: 'consegne/codice', element: <ClaimCodePage /> },
@@ -96,6 +107,8 @@ export const routes: RouteObject[] = [
               { path: 'spese/lavori/:workId', element: <WorkDetailPage /> },
               { path: 'spese/:expenseId', element: <ExpenseDetailRoute /> },
               { path: 'ambienti', element: <RoomsPage /> },
+              { path:'mappa',element:<MapPage/> },
+              { path:'mappa/:mapId',element:<MapPage/> },
               { path: 'ambienti/da-planimetria', element: <FloorPlanPage /> },
               { path: 'ambienti/da-planimetria/:documentId', element: <FloorPlanPage /> },
               { path: 'ambienti/:roomId', element: <RoomDetailPage /> },

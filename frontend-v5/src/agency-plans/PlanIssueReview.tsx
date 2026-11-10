@@ -1,0 +1,45 @@
+import {useId,useState} from 'react';
+import styles from './practice-plan.module.css';
+
+export type Resolution='included_in_geometry'|'excluded_from_computation'|'not_applicable';
+const outcomes:Record<Resolution,string>={
+ included_in_geometry:'Ho incluso l’elemento nel contorno',
+ excluded_from_computation:'Ho verificato che resta fuori dal computo',
+ not_applicable:'La segnalazione non è pertinente',
+};
+
+/** One open check, linked to its room name and map point. Registering an outcome removes it from the open list server-side. */
+export function PlanIssueReview(p:{
+ issue:{id:string;code:string};index:number;roomLabel?:string;description:string;symbolReason?:string;
+ active?:boolean;wholePage?:boolean;approximate?:boolean;onShow?:()=>void;showLabel?:string;showDisabled?:boolean;disabled:boolean;geometryEdited:boolean;
+ onResolve:(issue:{id:string;code:string},resolution:Resolution,reason:string)=>void;
+}){
+ const [resolution,setResolution]=useState<Resolution|''>(''),[reason,setReason]=useState('');
+ const summaryId=useId();
+ const label=(p.roomLabel?p.roomLabel+' · ':'')+'verifica '+p.index;
+ const summary=<>
+  <span className={styles.issueTitle}><strong>{p.roomLabel??'Zona senza vano'}</strong> <span>n. {p.index}</span></span>
+  <span>{p.description}</span>
+  {p.symbolReason&&<span className={styles.muted}>{p.symbolReason}</span>}
+ </>;
+ const action=p.showLabel??'Mostra sulla mappa';
+ return <li className={styles.issueItem} data-active={p.active||undefined}>
+  {p.onShow?<button className={styles.issueMapLink} type="button" disabled={p.showDisabled} onClick={p.onShow}
+   aria-label={action} aria-describedby={summaryId} aria-pressed={!!p.active}>
+   <span id={summaryId} className={styles.issueSummary}>{summary}</span>
+   <span className={styles.issueLinkText}>{action}</span>
+  </button>:<div className={styles.issueSummary}>{summary}<span className={styles.muted}>Questa verifica non ha ancora una posizione salvata.</span></div>}
+  {p.onShow&&p.wholePage&&<p className={styles.muted}>Questa verifica non ha ancora una posizione salvata.</p>}
+  {p.active&&p.approximate&&<p className={styles.muted}>Il segnaposto indica il punto da cui è partita l’analisi. Controlla l’area intorno.</p>}
+  <div className={styles.issueActions}>
+   <label>Esito {label}<select value={resolution} disabled={p.disabled} onChange={e=>setResolution(e.target.value as Resolution|'')}>
+    <option value="">Scegli esito</option>
+    {(Object.keys(outcomes) as Resolution[]).map(id=><option key={id} value={id} disabled={id==='included_in_geometry'&&!p.geometryEdited}>{outcomes[id]}</option>)}
+   </select></label>
+  </div>
+  {resolution&&<>
+   <label>Nota facoltativa {label}<input value={reason} disabled={p.disabled} maxLength={1000} onChange={e=>setReason(e.target.value)} placeholder="Es. controllato sull’originale"/></label>
+   <button type="button" className={styles.primaryButton} disabled={p.disabled} onClick={()=>p.onResolve(p.issue,resolution,reason.trim()||outcomes[resolution])}>Chiudi verifica {p.index}</button>
+  </>}
+ </li>;
+}

@@ -453,4 +453,156 @@ profiles['test:cestino-completo-db'] = {
   files: [...new Set(['test:trash-db', 'test:cestino-riesame-db', 'test:cestino-race-db', 'test:cestino-extra-review-db', 'test:cestino-fixes-db'].flatMap(name => profiles[name].files))],
   apiFiles: []
 };
+profiles['test:agency-practices'] = { database: false, api: false, files: ['test/agency-practices.test.cjs'] };
+profiles.test.files.push('test/agency-practices.test.cjs');
+profiles["test:agency-practices-db"] = { database: true, api: false, files: ["test/agency-practices.integration.test.cjs"], apiFiles: [] };
+profiles["test:offline-db"].files.push("test/agency-practices.integration.test.cjs");
+profiles["test:agency-review"] = { database:false, api:false, files:["test/agency-review.test.cjs"] };
+profiles.test.files.push("test/agency-review.test.cjs");
+
+profiles.test.files.push('test/agency-journey.test.cjs');
+profiles['test:agency-journey-browser-20261105']={database:true,api:false,files:['test/agency-journey-browser-20261105.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-05T17:30:00.000Z'};
 module.exports = profiles;
+profiles['test:agency-coherence'] = { database:false, api:false, files:['test/agency-coherence.test.cjs'] };
+profiles.test.files.push('test/agency-coherence.test.cjs');
+
+profiles['test:agency-plans'] = { database:false, api:false, files:['test/agency-plans.test.cjs'] };
+profiles.test.files.push('test/agency-plans.test.cjs');
+
+profiles['test:agency-plans-db'] = { database:true, api:false, files:['test/agency-practices.integration.test.cjs','test/agency-plans.integration.test.cjs'], apiFiles:[] };
+profiles['test:offline-db'].files.push('test/agency-plans.integration.test.cjs');
+
+profiles['test:agency-files'] = {database:false,api:false,files:['test/agency-files.test.cjs']};
+profiles.test.files.push('test/agency-files.test.cjs');
+profiles['test:agency-files-db'] = {database:true,api:false,files:['test/agency-files.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-files.integration.test.cjs');
+
+profiles['test:agency-renderer'] = {database:false,api:false,files:['test/agency-renderer.test.cjs']};
+profiles.test.files.push('test/agency-renderer.test.cjs');
+
+profiles['test:agency-jobs'] = {database:false,api:false,files:['test/agency-jobs.test.cjs']};
+profiles.test.files.push('test/agency-jobs.test.cjs');
+profiles['test:agency-jobs-db'] = {database:true,api:false,files:['test/agency-jobs.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-jobs.integration.test.cjs');
+
+profiles['test:agency-budget-db']={database:true,api:false,files:['test/agency-jobs.integration.test.cjs','test/agency-budget.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-budget.integration.test.cjs');
+
+profiles['test:agency-worker']={database:false,api:false,files:['test/agency-worker.test.cjs']};
+profiles.test.files.push('test/agency-worker.test.cjs');
+profiles['test:agency-worker-db']={database:true,api:false,files:['test/agency-jobs.integration.test.cjs','test/agency-budget.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-worker.integration.test.cjs');
+
+profiles['test:agency-transport']={database:false,api:false,files:['test/agency-transport.test.cjs']};
+profiles.test.files.push('test/agency-transport.test.cjs');
+
+profiles['test:agency-http-db']={database:true,api:false,files:['test/agency-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-http.integration.test.cjs');
+
+profiles['test:agency-edit-dto']={database:false,api:false,files:['test/agency-edit-dto.test.cjs']};
+profiles.test.files.push('test/agency-edit-dto.test.cjs');
+
+profiles['test:agency-preview-db']={database:true,api:false,files:['test/agency-worker.integration.test.cjs','test/agency-http.integration.test.cjs','test/agency-plans.integration.test.cjs'],apiFiles:[]};
+
+profiles['test:agency-findings']={database:false,api:false,files:['test/agency-findings.test.cjs']};
+profiles.test.files.push('test/agency-findings.test.cjs');
+
+profiles['test:agency-findings-db']={database:true,api:false,files:['test/agency-findings.integration.test.cjs','test/agency-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-findings.integration.test.cjs');
+
+profiles['test:agency-navigation-db']={database:true,api:false,files:['test/agency-navigation.integration.test.cjs','test/agency-http.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-navigation.integration.test.cjs');
+
+// Dedicated deed persistence profile, included in the protected DB aggregate.
+profiles['test:agency-deed-records-db']={database:true,api:false,files:['test/agency-deed-records.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-deed-records.integration.test.cjs');
+
+// Dated manual trial, never part of aggregate suites.
+profiles['test:agency-trial']={database:true,api:false,files:['test/agency-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T15:15:00Z'};
+
+profiles['test:agency-deed-http-db']={database:true,api:false,files:['test/agency-deed-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-deed-http.integration.test.cjs');
+
+// Dated browser review trial; excluded from aggregate suites.
+profiles['test:agency-review-trial']={database:true,api:false,files:['test/agency-review-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T16:00:00Z'};
+
+// Dated surface-adoption browser trial, no product/provider fallback.
+profiles['test:agency-surfaces-trial']={database:true,api:false,files:['test/agency-surfaces-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T22:19:01.871Z'};
+
+// A4 calibration browser trial, explicitly isolated and time bounded.
+profiles['test:agency-paper-trial']={database:true,api:false,files:['test/agency-paper-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-10-30T23:10:00.000Z'};
+profiles['test:agency-paper-db']={database:true,api:false,files:['test/agency-paper-http.integration.test.cjs','test/agency-plans.integration.test.cjs','test/agency-worker.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-paper-http.integration.test.cjs');
+
+profiles['test:agency-gift-packet']={database:false,api:false,files:['test/agency-gift-packet.test.cjs','test/agency-gift-registry.test.cjs','test/agency-gift-invitations.test.cjs','test/agency-gift-acceptance-command.test.cjs','test/agency-gift-file-admission.test.cjs','test/gift-provenance.test.cjs','test/agency-gift-benefit.test.cjs','test/agency-gift-acceptance-receipt.test.cjs','test/agency-gift-benefits-store.test.cjs','test/agency-gift-http-contracts.test.cjs','test/agency-gift-document-release.test.cjs','test/agency-gift-runner.test.cjs','test/agency-gift-http-filter.test.cjs']};
+profiles.test.files.push('test/agency-gift-packet.test.cjs');
+
+profiles.test.files.push('test/agency-gift-registry.test.cjs');
+
+profiles['test:agency-gift-db']={database:true,api:false,files:['test/agency-gift.integration.test.cjs','test/agency-gift-invitations.integration.test.cjs','test/gift-provenance.integration.test.cjs','test/agency-gift-acceptance.integration.test.cjs','test/agency-gift-worker.integration.test.cjs','test/agency-gift-document-release.integration.test.cjs','test/agency-gift-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-gift.integration.test.cjs');
+
+profiles.test.files.push('test/agency-gift-invitations.test.cjs');
+
+profiles['test:offline-db'].files.push('test/agency-gift-invitations.integration.test.cjs');
+
+profiles.test.files.push('test/agency-gift-acceptance-command.test.cjs','test/agency-gift-file-admission.test.cjs','test/gift-provenance.test.cjs');
+
+profiles['test:offline-db'].files.push('test/gift-provenance.integration.test.cjs');
+
+profiles.test.files.push('test/agency-gift-benefit.test.cjs');
+profiles['test:offline-db'].files.push('test/agency-gift-acceptance.integration.test.cjs');
+
+profiles.test.files.push('test/agency-gift-acceptance-receipt.test.cjs');
+profiles['test:offline-db'].files.push('test/agency-gift-worker.integration.test.cjs');
+
+profiles.test.files.push('test/agency-gift-benefits-store.test.cjs');
+
+profiles.test.files.push('test/agency-gift-http-contracts.test.cjs','test/agency-gift-document-release.test.cjs','test/agency-gift-runner.test.cjs','test/agency-gift-http-filter.test.cjs');
+profiles['test:offline-db'].files.push('test/agency-gift-document-release.integration.test.cjs','test/agency-gift-http.integration.test.cjs');
+
+// Nominal-only fresh cluster: the live poller must not dispatch other suites' queued fixtures.
+profiles['test:agency-gift-runner-db']={database:true,api:false,files:['test/agency-gift-runner.integration.test.cjs'],apiFiles:[]};
+// Gift application recovery and rate limiting stay in the dedicated offline clusters.
+profiles['test:agency-gift-packet'].files.push('test/agency-gift-reissue.test.cjs','test/agency-gift-throttle.test.cjs');
+profiles.test.files.push('test/agency-gift-reissue.test.cjs','test/agency-gift-throttle.test.cjs');
+profiles['test:agency-gift-db'].files.push('test/agency-gift-reissue.integration.test.cjs');
+profiles['test:offline-db'].files.push('test/agency-gift-reissue.integration.test.cjs');
+
+// Dated, nominal Gift browser collaudo: never enter ordinary or aggregate suites.
+profiles['test:agency-gift-browser-trial']={database:true,api:false,files:['test/agency-gift-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T07:00:00.000Z'};
+
+profiles.test.files.push('test/home-map.test.cjs');
+profiles['test:agency-gift-packet'].files.push('test/home-map.test.cjs');
+profiles['test:home-map-db']={database:true,api:false,files:['test/home-map.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/home-map.integration.test.cjs');
+
+profiles['test:home-map-browser-trial']={database:true,api:false,files:['test/home-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T08:30:00.000Z'};
+
+profiles['test:home-map-drag-db']={database:true,api:false,files:['test/home-map.integration.test.cjs'],apiFiles:[]};
+
+profiles['test:ambienti-map-browser-trial']={database:true,api:false,files:['test/ambienti-map-browser-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T09:00:00.000Z'};
+
+profiles['test:ambienti-map-followup-trial']={database:true,api:false,files:['test/ambienti-map-followup-trial.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-01T13:00:00.000Z'};
+
+profiles['test:ambienti-user-trial-20261102']={database:true,api:false,files:['test/ambienti-user-trial-20261102.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T00:30:00.000Z'};
+
+profiles['test:gift-simple-browser-20261103']={database:true,api:false,files:['test/gift-simple-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T01:00:00.000Z'};
+
+profiles['test:gift-simple-user-trial-20261103']={database:true,api:false,files:['test/gift-simple-user-trial-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T11:30:00.000Z'};
+
+profiles['test:home-map-operator']={database:false,api:false,files:['test/home-map-operator-import.test.cjs']};
+profiles.test.files.push(...profiles['test:home-map-operator'].files);
+profiles['test:home-map-operator-db']={database:true,api:false,files:['test/home-map-operator-import.integration.test.cjs','test/home-map.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/home-map-operator-import.integration.test.cjs');
+// Native agency document analysis: synthetic/injected providers only, independent of plan budget.
+profiles['test:agency-document-analysis']={database:false,api:false,files:['test/agency-document-analysis-domain.test.cjs','test/agency-document-provider.test.cjs','test/agency-document-coordinator.test.cjs','test/agency-document-analysis-http.test.cjs']};
+profiles.test.files.push(...profiles['test:agency-document-analysis'].files);
+profiles['test:agency-document-analysis-db']={database:true,api:false,files:['test/agency-document-analysis-store.integration.test.cjs','test/agency-document-analysis-http.integration.test.cjs'],apiFiles:[]};
+profiles['test:offline-db'].files.push(...profiles['test:agency-document-analysis-db'].files);
+profiles['test:agency-document-browser-20261103']={database:true,api:false,files:['test/agency-document-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T12:30:00.000Z'};
+
+// Combined candidate: both original DB groups plus a synthetic succession/discrepancy journey.
+profiles['test:agency-documents-integration-db']={database:true,api:false,files:[...new Set([...profiles['test:agency-document-analysis-db'].files,...profiles['test:home-map-operator-db'].files,'test/agency-documents-journey.integration.test.cjs'])],apiFiles:[]};
+profiles['test:offline-db'].files.push('test/agency-documents-journey.integration.test.cjs');
+profiles['test:agency-documents-integration-browser-20261103']={database:true,api:false,files:['test/agency-documents-integration-browser-20261103.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-03T17:00:00.000Z'};

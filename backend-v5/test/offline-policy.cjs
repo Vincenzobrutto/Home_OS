@@ -1,13 +1,16 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
-const DB_PORT = 55439, API_PORT = 3119;
+// A second fixed, equally guarded port allows geometry API tests while a user trial owns 55439.
+const SECONDARY = process.env.DIMORA_OFFLINE_SECONDARY === 'agency-manual-room';
+const DB_PORT = SECONDARY ? 55440 : 55439, API_PORT = 3119;
 const DB_URL = `postgresql://quality_test@127.0.0.1:${DB_PORT}/dimora_v5_quality_v3_test`;
 function assertOfflineDatabase(raw) {
  if (raw !== DB_URL) throw Error('offline_database_forbidden');
 }
 function cleanEnvironment(parent, mode, runDir, token) {
  const env = {};
+ if(SECONDARY)env.DIMORA_OFFLINE_SECONDARY='agency-manual-room';
  const allowed = /^(?:path|systemroot|windir|comspec|pathext|temp|tmp|userprofile|appdata|localappdata|programdata|programfiles|programfiles\(x86\)|systemdrive|homedrive|homepath)$/i;
  for (const [key, value] of Object.entries(parent)) if (allowed.test(key)) env[key] = value;
  Object.assign(env, { M4_AI_ENABLED: 'false', ONBOARDING_AI_ENABLED: 'false', DIMORA_OFFLINE_MODE: mode });

@@ -12,6 +12,18 @@ enum HomeRole {
   viewer
 }
 model Account {
+  documentAnalysisOffers AgencyDocumentAnalysisOffer[]
+  documentAnalysisJobs AgencyDocumentAnalysisJob[]
+  digitalPlans HomeDigitalPlan[]
+  giftAcceptanceReceipts AgencyGiftAcceptanceReceipt[]
+  giftBenefits AccountGiftBenefit[]
+  giftAcceptanceJobs AgencyGiftAcceptanceJob[]
+  issuedGiftInvitations AgencyGiftInvitation[] @relation("GiftIssuer")
+  claimedGiftInvitations AgencyGiftInvitation[] @relation("GiftClaimant")
+  agencyMembers AgencyMember[]
+  agencyGrants AgencyPracticeGrant[]
+  agencyCreateRequests AgencyCreateRequest[]
+  agencyPlanAuthorizations AgencyPlanAuthorization[]
   trashRequests TrashRequest[]
   historyEvents HomeHistoryEvent[]
   historyRequests HomeHistoryRequest[]
@@ -67,6 +79,114 @@ model Account {
   objectEvents ObjectEvent[]
   objectRequests ObjectRequest[]
 }
+
+model Agency {
+  documentAiBudgets AgencyDocumentAiBudget[]
+  giftInvitations AgencyGiftInvitation[]
+  id String @id @default(uuid())
+  name String
+  createdAt DateTime @default(now())
+  members AgencyMember[]
+  practices AgencyPractice[]
+  createRequests AgencyCreateRequest[]
+  aiBudgets AgencyAiBudget[]
+}
+
+// Provisioned explicitly by the server/operator, never by a provider callback.
+model AgencyAiBudget {
+  id String @id @default(uuid())
+  agencyId String
+  capMicros BigInt
+  committedMicros BigInt @default(0)
+  spentMicros BigInt @default(0)
+  expiresAt DateTime
+  revokedAt DateTime?
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  authorizations AgencyPlanAuthorization[]
+}
+
+model AgencyPlanAuthorization {
+  id String @id @default(uuid())
+  budgetId String
+  practiceId String
+  accountId String
+  approvalReceipt String @unique
+  proof Json
+  capMicros BigInt
+  committedMicros BigInt @default(0)
+  spentMicros BigInt @default(0)
+  priceVersion String
+  model String
+  inputMicrosPerMillion Int
+  outputMicrosPerMillion Int
+  expiresAt DateTime
+  revokedAt DateTime?
+  runId String? @unique
+  state String @default("issued")
+  budget AgencyAiBudget @relation(fields:[budgetId],references:[id],onDelete:Restrict)
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+}
+
+model AgencyMember {
+  id String @id @default(uuid())
+  agencyId String
+  accountId String
+  role String
+  validFrom DateTime @default(now())
+  validUntil DateTime?
+  revokedAt DateTime?
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  @@unique([agencyId,accountId])
+}
+
+model AgencyPractice {
+  documentAnalysisOffers AgencyDocumentAnalysisOffer[]
+  documentAnalysisJobs AgencyDocumentAnalysisJob[]
+  giftAcceptanceJobs AgencyGiftAcceptanceJob[]
+  giftInvitations AgencyGiftInvitation[]
+  id String @id @default(uuid())
+  agencyId String
+  label String
+  revision Int @default(1)
+  snapshotVersion Int @default(1)
+  snapshot Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  grants AgencyPracticeGrant[]
+  createRequests AgencyCreateRequest[]
+  planAuthorizations AgencyPlanAuthorization[]
+  @@index([agencyId,createdAt,id])
+}
+
+model AgencyPracticeGrant {
+  id String @id @default(uuid())
+  practiceId String
+  accountId String
+  access String
+  canExport Boolean @default(false)
+  validFrom DateTime @default(now())
+  validUntil DateTime?
+  revokedAt DateTime?
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  @@unique([practiceId,accountId])
+}
+
+model AgencyCreateRequest {
+  id String @id @default(uuid())
+  agencyId String
+  accountId String
+  key String
+  digest String
+  practiceId String
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  @@unique([agencyId,accountId,key])
+}
 model AuthChallenge {
   id String @id @default(uuid())
   accountId String
@@ -97,6 +217,7 @@ model Session {
   @@index([expiresAt])
 }
 model Home {
+  digitalPlans HomeDigitalPlan[]
   trashRequests TrashRequest[]
   deletionRecords DeletionRecord[]
   historyEvents HomeHistoryEvent[]
@@ -245,6 +366,7 @@ enum DocumentVisibility {
   home
 }
 model Document {
+  giftProvenance Json?
   onboardingComparisons ObjectOnboardingComparison[]
   onboardingDrafts ObjectOnboardingDraft[]
   onboardingJobs ObjectOnboardingJob[]
@@ -1142,6 +1264,7 @@ model DocumentIntakeAnalysis {
 
 // Personal overlay: never changes the original or the shared document title.
 model DocumentOrganization {
+  classificationOrigin String @default("user_declared")
   id String @id @default(uuid())
   accountId String
   homeId String
@@ -1283,4 +1406,219 @@ model DeletionRecord {
   home Home @relation(fields: [homeId], references: [id], onDelete: Restrict)
   @@unique([resourceKind, resourceId])
   @@index([fileRemovedAt, deletedAt])
+}
+
+// Internal Gift v1 ledger. No raw invitation secret or automatic Home entitlement.
+model AgencyGiftInvitation {
+  acceptanceJobs AgencyGiftAcceptanceJob[]
+  id String @id
+  agencyId String
+  practiceId String
+  issuerAccountId String
+  creationKey String
+  creationDigest String
+  tokenHash String @unique
+  version Int
+  state String
+  expiresAt DateTime
+  claimedAccountId String?
+  snapshot Json
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+  agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  issuer Account @relation("GiftIssuer",fields:[issuerAccountId],references:[id],onDelete:Restrict)
+  claimant Account? @relation("GiftClaimant",fields:[claimedAccountId],references:[id],onDelete:Restrict)
+  @@unique([practiceId,issuerAccountId,creationKey])
+  @@index([agencyId,practiceId,state])
+  @@index([expiresAt,id])
+}
+
+// Internal durable reservation. Acceptance/publication is a separate worker increment.
+model AgencyGiftAcceptanceJob {
+  id String @id
+  practiceId String
+  invitationId String
+  accountId String
+  requestKey String
+  commandDigest String
+  invitationVersion Int
+  invitationSeal String
+  sourceFingerprint String
+  homeId String
+  homeInput Json?
+  manifest Json?
+  preparationDigest String
+  state String @default("queued")
+  version Int @default(1)
+  leaseEpoch Int @default(0)
+  leaseTokenHash String?
+  leaseUntil DateTime?
+  attempts Int @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+  invitation AgencyGiftInvitation @relation(fields:[invitationId],references:[id],onDelete:Restrict)
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  items AgencyGiftAcceptanceItem[]
+  @@unique([accountId,invitationId,requestKey])
+  @@index([practiceId,state])
+  @@index([state,leaseUntil,id])
+}
+
+model AgencyGiftAcceptanceItem {
+  id String @id
+  jobId String
+  ordinal Int
+  sourceId String
+  sourceVersion Int
+  sourceSha256 String
+  documentId String @unique
+  documentVersionId String @unique
+  storedFileId String @unique
+  state String @default("pending")
+  storageKey String? @unique
+  control Json?
+  admittedEpoch Int?
+  job AgencyGiftAcceptanceJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+  @@unique([jobId,ordinal])
+  @@unique([jobId,sourceId])
+}
+// Accepted owner receipt is independent of Agency/source and Home/document retention.
+model AgencyGiftAcceptanceReceipt {
+  id String @id
+  practiceId String @unique
+  invitationId String @unique
+  jobId String @unique
+  accountId String
+  requestKey String
+  commandDigest String
+  sourceFingerprint String
+  homeId String
+  acceptedAt DateTime
+  snapshot Json
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  benefit AccountGiftBenefit?
+  @@unique([accountId,invitationId,requestKey])
+}
+
+model AccountGiftBenefit {
+  id String @id
+  receiptId String @unique
+  accountId String
+  offerId String
+  offerVersion Int
+  startsAt DateTime
+  endsAt DateTime
+  account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+  receipt AgencyGiftAcceptanceReceipt @relation(fields:[receiptId],references:[id],onDelete:Restrict)
+  @@index([accountId,startsAt,endsAt])
+}
+model HomeDigitalPlan {
+ id String @id @default(uuid())
+ accountId String
+ homeId String
+ documentId String @unique
+ documentVersion Int
+ documentSha256 String
+ version Int @default(1)
+ geometryRevision Int @default(1)
+ received Json
+ layout Json
+ roomBindings Json
+ pins Json @default("[]")
+ createdAt DateTime @default(now())
+ updatedAt DateTime @default(now())
+ account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+ home Home @relation(fields:[homeId],references:[id],onDelete:Restrict)
+ @@index([accountId,homeId])
+}
+
+// Document extraction has its own purpose, currency and explicit server provisioning.
+model AgencyDocumentAiBudget {
+ id String @id @default(uuid())
+ agencyId String
+ purpose String @default("DOCUMENT_EXTRACT")
+ configDigest String
+ currency String
+ capMicros BigInt
+ committedMicros BigInt @default(0)
+ spentMicros BigInt @default(0)
+ expiresAt DateTime
+ revokedAt DateTime?
+ createdAt DateTime @default(now())
+ agency Agency @relation(fields:[agencyId],references:[id],onDelete:Restrict)
+ jobs AgencyDocumentAnalysisJob[]
+ @@index([agencyId,configDigest,expiresAt])
+}
+model AgencyDocumentAnalysisOffer {
+ id String @id @default(uuid())
+ accountId String
+ practiceId String
+ agencyId String
+ snapshot Json
+ digest String
+ expiresAt DateTime
+ createdAt DateTime @default(now())
+ account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+ practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+ job AgencyDocumentAnalysisJob?
+ @@index([accountId,practiceId,expiresAt])
+}
+model AgencyDocumentAnalysisJob {
+ id String @id @default(uuid())
+ accountId String
+ practiceId String
+ agencyId String
+ offerId String @unique
+ budgetId String
+ requestKey String
+ commandDigest String
+ proof Json
+ configuration Json
+ consentReceipt String @unique
+ approvedAt DateTime
+ activeProofKey String? @unique
+ state String @default("queued")
+ version Int @default(1)
+ leaseEpoch Int @default(0)
+ leaseTokenHash String?
+ leaseUntil DateTime?
+ countedInputTokens Int?
+ recordId String?
+ capMicros BigInt
+ committedMicros BigInt
+ spentMicros BigInt @default(0)
+ currency String
+ reason String?
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ account Account @relation(fields:[accountId],references:[id],onDelete:Restrict)
+ practice AgencyPractice @relation(fields:[practiceId],references:[id],onDelete:Restrict)
+ offer AgencyDocumentAnalysisOffer @relation(fields:[offerId],references:[id],onDelete:Restrict)
+ budget AgencyDocumentAiBudget @relation(fields:[budgetId],references:[id],onDelete:Restrict)
+ dispatches AgencyDocumentAnalysisDispatch[]
+ @@unique([accountId,practiceId,requestKey])
+ @@index([state,leaseUntil,createdAt])
+ @@index([practiceId,accountId,createdAt])
+}
+model AgencyDocumentAnalysisDispatch {
+ id String @id @default(uuid())
+ jobId String
+ phase String
+ epoch Int
+ capabilityHash String
+ payloadDigest String
+ state String @default("dispatched")
+ providerRequestId String?
+ receiptIdentity String? @unique
+ inputTokens Int?
+ outputTokens Int?
+ countedInputTokens Int?
+ costMicros BigInt?
+ dispatchedAt DateTime @default(now())
+ settledAt DateTime?
+ job AgencyDocumentAnalysisJob @relation(fields:[jobId],references:[id],onDelete:Restrict)
+ @@unique([jobId,phase])
 }

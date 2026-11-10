@@ -7,6 +7,7 @@ import { hasErrors, validateLogin, validateRegister, type FieldErrors } from '..
 import { useLogin, useRegister } from '../session/hooks';
 import { useSession } from '../session/session';
 import styles from './pages.module.css';
+import { safeGiftNext } from '../agency-gift/gift-link-memory';
 
 /** Porta il focus sul primo campo con errore, nell'ordine del form. */
 function focusFirstError(form: HTMLFormElement | null, order: string[], errors: Record<string, string | undefined>) {
@@ -51,6 +52,8 @@ export function LoginPage() {
   const [errors, setErrors] = useState<FieldErrors<'email' | 'password'>>({});
   const [showPassword, setShowPassword] = useState(false);
   const sessionExpired = params.has('next');
+  const giftNext = safeGiftNext(params.get('next'));
+  const registerPath = giftNext === '/' ? '/registrati' : '/registrati?next=' + encodeURIComponent(giftNext);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -128,7 +131,7 @@ export function LoginPage() {
         </form>
         <p><Link to="/recupera-accesso" state={{email:values.email}}>Hai dimenticato la password?</Link></p>
         <p className={styles.altLink}>
-          Non hai un account? <Link to="/registrati">Crea un account locale di sviluppo</Link>
+          Non hai un account? <Link to={registerPath}>{giftNext === '/' ? 'Crea un account locale di sviluppo' : 'Crea un account Dimora'}</Link>
         </p>
       </div>
     </PublicShell>
@@ -139,6 +142,9 @@ const REGISTER_FIELDS = ['name', 'email', 'password'] as const;
 
 export function RegisterPage() {
   useDocumentTitle('Crea account');
+  const [params] = useSearchParams();
+  const giftNext = safeGiftNext(params.get('next'));
+  const loginPath = giftNext === '/' ? '/accedi' : '/accedi?next=' + encodeURIComponent(giftNext);
   const recoveryEnabled = useSession().data?.authRecovery?.enabled === true;
   const register = useRegister();
   const formRef = useRef<HTMLFormElement>(null);
@@ -227,7 +233,7 @@ export function RegisterPage() {
           </div>
         </form>
         <p className={styles.altLink}>
-          Hai già un account? <Link to="/accedi">Accedi</Link>
+          Hai già un account? <Link to={loginPath}>Accedi</Link>
         </p>
       </div>
     </PublicShell>

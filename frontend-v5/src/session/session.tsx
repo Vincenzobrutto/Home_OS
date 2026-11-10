@@ -4,6 +4,7 @@ import { ApiClient } from '../api/client';
 import { queryKeys } from '../api/queryKeys';
 import type { Account } from '../api/types';
 import { clearPrivateCache } from './queryClient';
+import { purgePendingAnalyses } from '../agency-document-analysis/pending';
 
 const ApiContext = createContext<ApiClient | null>(null);
 const AccountContext = createContext<Account | null>(null);
@@ -85,6 +86,7 @@ function AccountWatcher() {
   const previous = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     if (accountId === undefined) return;
+    purgePendingAnalyses(accountId);
     if (previous.current !== undefined && previous.current !== accountId) {
       clearPrivateCache(queryClient);
     }

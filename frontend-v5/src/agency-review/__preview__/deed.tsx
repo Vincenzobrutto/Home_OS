@@ -1,0 +1,10 @@
+import {useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {DeedWorkspace} from '../DeedWorkspace';
+import type {AgencyDeedPort,DeedView} from '../deed-api';
+const snapshot=():DeedView=>({units:[{id:'u',label:'Appartamento sintetico'}],proposals:{revision:4,certification:false,canGenerateDraft:false,records:[{id:'record',visibility:'private',sourceId:'deed',version:1,sha256:'a'.repeat(64),status:'current',bindings:[],result:{fingerprint:'b'.repeat(64),issues:[],proposals:[{candidateId:'owner',field:'party.name',proposedValue:'Elena Verdi',documentSubjectRef:'person-in-deed',documentUnitRef:'unit-in-deed',proposedDocumentRole:'historical_owner',status:'unbound_proposal',lexicalEvidenceVerified:true,semanticEvidenceVerified:false,requiresHumanBinding:true,evidence:{sourceId:'deed',version:1,sha256:'a'.repeat(64),page:3,excerpt:'Elena Verdi vende a Marco Rossi.'}}]}}]}});
+
+let state=snapshot();
+const api:AgencyDeedPort={read:async()=>structuredClone(state),bind:async(recordId,body)=>{state=structuredClone(state);state.proposals.revision++;const record=state.proposals.records.find(r=>r.id===recordId)!;const factId='synthetic-'+state.proposals.revision;record.bindings!.push({candidateId:body.candidateId,unitId:body.unitId,subjectKey:body.subjectKey,factId,actorId:'synthetic-agent',at:'2026-10-30T12:30:00Z',acknowledgedDocumentRole:body.acknowledgedDocumentRole,reason:body.reason});return {replay:false,recordId,factId,proposals:structuredClone(state.proposals),review:{revision:state.proposals.revision,units:state.units,facts:[]}};}};
+function Harness(){const [opened,setOpened]=useState('');return <main><div style={{padding:16,background:'#fff3cf'}}>Harness locale · documento, proposte e salvataggi sintetici. Nessuna operazione reale, AI o collegamento alla navigazione prodotto.</div>{opened&&<p role="status">{opened}</p>}<DeedWorkspace scopeKey="synthetic-deed" api={api} onOpenSource={e=>setOpened('Fonte sintetica selezionata · pagina '+e.page)}/></main>;}
+createRoot(document.getElementById('root')!).render(<Harness/>);

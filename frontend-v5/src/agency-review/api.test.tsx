@@ -1,0 +1,9 @@
+import {describe,it,expect,vi} from 'vitest';
+import {ApiTransport,type FetchLike} from '../api/transport';
+import {agencyReviewApi} from './api';
+const json=(v:unknown)=>new Response(JSON.stringify(v),{headers:{'content-type':'application/json'}});
+describe('agency review API',()=>{
+ it('captures scope and uses the existing review read endpoint',async()=>{const scope={accountId:'a',agencyId:'g',practiceId:'p'},fetch=vi.fn<FetchLike>(async()=>json({revision:1,units:[],facts:[]})),api=agencyReviewApi(new ApiTransport({fetch}),scope);scope.practiceId='other';await api.read();expect(fetch.mock.calls[0]![0]).toBe('/api/v5/agencies/g/practices/p/review');expect(new Headers(fetch.mock.calls[0]![1].headers).get('x-account-context')).toBe('a');});
+ it('preserves CSRF/account context and explicit idempotency key on writes',async()=>{const fetch=vi.fn<FetchLike>(async path=>path.endsWith('/session')?json({csrfToken:'synthetic-csrf',account:{id:'a'}}):json({replay:false,review:{revision:2,units:[],facts:[]}})),api=agencyReviewApi(new ApiTransport({fetch}),{accountId:'a',agencyId:'g',practiceId:'p'});await api.decide({expectedRevision:1,command:{operation:'decide',factId:'f',expectedFactVersion:1,action:'confirm',reason:null}},'same-key');const opts=fetch.mock.calls[1]![1],headers=new Headers(opts.headers);expect(headers.get('x-csrf-token')).toBe('synthetic-csrf');expect(headers.get('idempotency-key')).toBe('same-key');expect(opts.credentials).toBe('include');});
+ it('does not substitute fixture data on access denial',async()=>{const fetch=vi.fn<FetchLike>(async()=>new Response(JSON.stringify({error:{code:'access_denied',message:'Denied'}}),{status:403,headers:{'content-type':'application/json'}}));await expect(agencyReviewApi(new ApiTransport({fetch}),{accountId:'a',agencyId:'g',practiceId:'p'}).read()).rejects.toMatchObject({status:403});expect(fetch).toHaveBeenCalledTimes(1);});
+});

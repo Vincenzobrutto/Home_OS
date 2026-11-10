@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ApiClient } from '../api/client';
 import { FakeBackend } from '../test/fakeBackend';
 import { createFakeFetch, renderApp } from '../test/harness';
@@ -7,6 +7,8 @@ import type { AiBudget, Draft, Form, FieldKey } from './model';
 import { choice, initialForm, houseExpenseTitle } from './model';
 import { PdfPreview } from '../documents/PdfPreview';
 vi.mock('../documents/PdfPreview',()=>({PdfPreview:vi.fn(()=> <div role="img" aria-label="Anteprima PDF locale"/>)}));
+// This suite tests onboarding behaviour, not the first cold import of its lazy route.
+beforeAll(async()=>{await import('./OnboardingPage');});
 async function world(options:{defaultView?:boolean;viewValue?:string;originalFailure?:boolean;manualMode?:boolean;savedDocumentOnly?:boolean;contactReview?:boolean;quantityTwo?:boolean;stepped?:boolean;fixedDocument?:boolean;threeRows?:boolean;shortName?:boolean;objectSuggestion?:boolean;analysisSucceeded?:boolean;contact?:boolean;completePurchase?:boolean;reviewWarning?:'delivery'|'quantity'|'unknown';conformity?:boolean;documentCost?:'works'|'service'|'bill';compilation?:'ai'|'manuale';lostUnrecorded?:boolean;pendingReview?:boolean;budget?:AiBudget;login?:boolean;start?:boolean;ai?:boolean;lost?:boolean;lostStart?:boolean;invalid?:boolean;foreign?:boolean;newAuthorization?:boolean;uncertainRetry?:boolean;derivedIdentity?:boolean;savedDraft?:boolean;purchase?:boolean;multiPurchase?:boolean;duplicates?:boolean;expenseFailure?:boolean;savedExpenseSkip?:boolean;compactList?:boolean;clearCandidates?:boolean;dynamicCandidates?:boolean}={}){
  const backend=new FakeBackend(),password='onboarding-demo-password',account=backend.seedAccount('Test','onboarding@example.test',password),home=backend.seedHome(account.id,'Casa sintetica','Via Test');
  const uuid=options.fixedDocument?vi.spyOn(globalThis.crypto,'randomUUID').mockReturnValueOnce('11111111-2222-4333-8444-555555555555'):null;

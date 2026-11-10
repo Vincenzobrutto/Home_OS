@@ -1,3 +1,6 @@
+## 31 ottobre 2026 — integrazione Agenzie, attivazione separata
+
+Il candidato della PR71 contiene capabilities autenticate `/api/v5/agency-capabilities`, directory `/api/v5/agencies` e pratiche nello scope agenzia. Il modulo completo è opt-in con storage root esplicita; la pagina disabilitata lo dichiara senza dati demo. Sessione, account-context, Origin/CSRF, membership/practice/source e versioni rimangono obbligatori. Analisi planimetrie distinta dall'estrazione atti ancora da orchestrare; nessuna nuova route di generazione incarico. [Contratto cumulativo](v5/agency-api-proposal-v1.md) e [integrazione/verifiche correnti](v5/agency-consolidation-20261031.md). Nessun endpoint viene attivato nei servizi esistenti da questo merge del codice.
 ## 18 ottobre 2026 — Documenti, stato del lavoro
 
 La lista GET /api/v5/homes/:homeId/documents aggiunge workflowState: to_compile | analyzing | review | completed | attention. È personale account/casa, relativo a versione/SHA correnti. completed riusa la medesima condizione del filtro workflow=completed; poi precedenza job attivo, bozza extraction aperta, ultimo job failed/uncertain, altrimenti da compilare. Una conferma successiva a vecchio esito incerto resta completed. Nessun cambiamento allo status stored dell'originale. Filtri all/pending/completed e cursori invariati; UI normale usa pending/completed. Nessun totale globale disponibile: niente contatori inventati dalle pagine caricate.
@@ -437,3 +440,6 @@ Endpoint invariati. JSON delle proposte articoli esteso con purchaseAmount facol
 
 ### Onboarding V5 —18 ottobre 2026
 Confirmations: costo dichiarato esplicitamente ammesso anche per bozza mode=manual/documentKind=unsupported, con medesimi controlli canonici e transazione oggetto+spesa. Nessuna nuova API, schema Prisma o modifica quote. Il wire esterno V8 usa array0/1; i DTO applicativi e le bozze mantengono oggetti nullable.
+
+## Agenzie — contratto ancora proposto,30ottobre2026
+Nessuna route Agenzie disponibile nel runtime attuale. Store interno e persistenza sono distinti da autenticazione/trasporto/upload HTTP. [Proposta API](v5/agency-api-proposal-v1.md), [stato verificato](v5/agency-worklog-20261030.md).

@@ -1,0 +1,27 @@
+# Aperture automatiche: osservazioni visive e verifica pixel — 30 ottobre 2026
+
+## Implementato
+La pipeline richiede openings nello stesso inventario/revisione AI già previsti: massimo12 osservazioni con spazio associato, stipiti approssimativi, punti interni/esterni opposti e segnale freccia/anta/arco. Contratto opzionale per compatibilità con risposte vecchie. Parser rifiuta segnali non supportati, coordinate malformate, duplicati e riferimenti assenti; non accetta poligoni o superfici inventate.
+
+opening-recovery cerca entro2–8pixel gli estremi sui pixel originali. Verifica orientamento, continuazione muraria ai due lati, appoggi trasversali di entrambi gli stipiti, tratto libero e punti di pavimento opposti. Casi ambigui/insufficienti restano needs_review. Le annotazioni visive provengono ancora dall'AI, non da un riconoscitore locale di frecce: hintSource e endpointSource distinguono le provenienze. Nessuna chiusura indiscriminata delle discontinuità.
+
+La soglia valida viene provata in una copia temporanea, con la stessa soglia del grigio della segmentazione. Si recupera una bozza solo se il vano contiene il punto interno ma non quello esterno, non ingloba seed esclusi, conserva esattamente punti/vuoti di tutte le regioni precedenti e non produce sovrapposizioni. Restano separati censimento semantico e componente continua: duplicati e conflitti non scompaiono solo perché il pavimento è stato recuperato. Un target già delimitato non viene automaticamente ridisegnato.
+
+Il risultato entra nel normale final della pipeline e nel salvataggio scoped esistente. openingReviews conserva osservazione e soglia proposta; boundary.virtualThresholdIds identifica i bordi derivati. Ogni recupero o rifiuto apre una verifica esplicita: stato needs_review, confirmed e coverageConfirmed falsi. Edit geometrici conservano il contratto già esistente che rimuove provenienza automatica. Nuovo fingerprint v5, nessuna nuova route o tabella. API lettura esistente e messaggi UI distinguono recupero proposto da apertura non verificata; entrambe le viste prodotto preservate.
+
+## Prova sulla foto fornita
+Replay locale delle precedenti risposte, senza invii AI. Indicazione approssimativa della porta fornita da Codex, non prodotta autonomamente dal provider: gli estremi precisi sono stati trovati dal nuovo motore. Recupero applicato, componente ingresso/stanza ovest disponibile; resta conflitto semantico fra spazi comunicanti. Questo prova la verifica geometrica ma non l'intera catena AI su documenti indipendenti. Il risultato base passa7→8regioni, senza applicare in questo replay i due involucri dei servizi del laboratorio precedente. Non presentare tale replay come10regioni integralmente automatiche.
+
+Nessuna nuova chiamata o spesa AI, nessuna lettura credenziali. Stesso numero di generazioni in produzione (2), prompt/output potenzialmente più lunghi: non costo identico garantito. Conteggio token preventivo e limite monetario già esistenti invariati, nessun retry aggiunto. Ledger/riserve precedenti invariati; ulteriori prove live richiedono budget disponibile e autorizzazione pertinente.
+
+## Verifiche e limiti
+Test mirati coprono ricerca stipiti, perturbazioni, rotazione90°, assenza di supporto trasversale, punti lato errato/su ink/fuori immagine, esclusione comuni, conflitto semantico, contratto, provenienze, integrazione pipeline due chiamate e persistenza scoped. Test aggiuntivo soglia grigio220 per scansioni chiare. Nessuna efficacia universale o percentuale di accuratezza ricavabile dalle fixture.
+
+Backend completo618/618 prima dell'ultimo caso di test sul grigio; mirato finale90/90 include tale caso. DB sintetico nuovo cn0Gp4:21/21, arrestato; evidenze openingReviews lette da nuovo client e accesso negato su fonte privata. UI mock workspace15/15, typecheck e lint mirati verdi. Risultati finali nei log agency-opening-*. Nessun E2E browser o375px nuovo dichiarato: UI modificata soltanto nei messaggi delle verifiche.
+
+Primi tentativi sandbox hanno impedito hardlink/cache temporanei e listener/avvio cluster: non fallimenti funzionali corretti alterando assert. Rieseguiti gli stessi runner offline autorizzati fuori sandbox, senza riusare servizi/DB esistenti. Un comando lint dalla root non trovava la configurazione; rieseguito dalla cartella backend. Report e conteggi distinguono i tentativi.
+
+## Prossimo campione
+Per ciascuna nuova planimetria: originale immutato e SHA, risoluzione nota, osservazioni AI salvate prima di qualunque ritocco; report per apertura (proposta, recuperata, rifiutata con motivo), vani omessi/accorpati, overlap e falsi confini. Ground truth umano soltanto dopo il risultato autonomo, con confronto visuale. Nessun numero atteso dei vani o coordinate della soluzione nel prompt. Campione separato con ingressi/frecce, finestre, muri spezzati da scansione, porte interne, scale comuni, open space, rotazioni e bassa qualità. Più aperture necessarie contemporaneamente, frecce che attraversano la soglia, stipiti assenti, geometrie oltre la finestra di ricerca e AI che omette openings possono restare irrisolti; nessun riempimento forzato.
+
+Demo Alessio invariata. Nessun deploy o merge; codice sul solo branch dedicato. Il laboratorio HTML precedente rimane un confronto distinto, non sostituito con un riconoscimento AI fittizio. Il flusso reale userà la nuova procedura alla prossima analisi autorizzata su un'istanza aggiornata; non è stato riavviato il trial privato scaduto.

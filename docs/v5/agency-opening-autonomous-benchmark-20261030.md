@@ -1,0 +1,18 @@
+# Prova autonoma completa sulla seconda planimetria — 30 ottobre 2026
+
+## Esito
+NON SUPERATA per il recupero dell'ingresso. Originale fornito dall'utente, nessuna coordinata, numero atteso o esempio della soluzione nel prompt. Due generazioni effettive con provider del software aggiornato, inventario e revisione; nessuna modifica manuale a seed, stipiti o geometrie. Codice0082e7d. Stessa immagine delle prove precedenti: regressione sul campione noto, non campione indipendente nuovo.
+
+AI censisce10spazi e propone un'apertura O1 per il corridoio con segnale arrow. Il motore raffina i punti ma la soglia non isola il target: opening_does_not_isolate_target, recupero non applicato. Riconoscere la zona della freccia non significa scegliere la coppia corretta di stipiti. Esito finale7contorni,0overlap; ingresso e stanza ovest ancora irrisolti, vestibolo accorpato a un altro vano con conflitto di classificazione. Il blocco servizi viene eroso/solo parzialmente ricostruito; balcone non censito. Le correzioni di arco e involucri dei servizi mostrate nel laboratorio precedente richiedevano selezione tecnica e non sono state reinserite per abbellire il risultato. Nessuna metratura.
+
+La sovrapposizione negli output privati mostra verde per contorni effettivi e tratteggio arancione per soglia rifiutata. Nessuna traslazione o riallineamento manuale; raster originale byte-identico al benchmark precedente, SHA verificato. Originale, risposte e coordinate fuori Git.
+
+## Budget e ripresa controllata
+Nuova autorizzazione esplicita utente: tetto totale4,50EUR. Riservati0,20USD per questa prova con fattore prudenziale2,5, bound aggregato4,411EUR; nessuna riserva precedente rilasciata. Spesa effettiva nuova0,050196USD (inventario0,012090; revisione0,038106), aggregato ricevute0,598878USD. Il fattore prudenziale non è cambio valutario.
+
+Prima chiamata completata; revisione fermata dal conteggio token preventivo prima di qualunque generazione perché max7500output oltre cap0,10USD. La pipeline marca genericamente uncertain anche questo errore, ma giornale dispatch+receipt prova che era stato inviato soltanto l'inventario. Preservato preflight-stop.private.json; continuazione registrata senza cancellare errore storico o liberare riserva. Identico inventario letto da risposta già pagata, nessun nuovo invio inventory. Revisione adattata nel solo harness al conteggio effettivo14548input e massimo7058output: massimo preventivo0,099676USD. Totale due generazioni reali, nessun retry di generazione inviata, nessun doppio addebito inventory. journal.error storico resta consultabile anche con state complete.
+
+## Prossimo gate
+La verifica fail-closed ha impedito di presentare come stanza recuperata una chiusura inefficace. Va migliorata la proposta visiva degli stipiti: dettaglio locale generato automaticamente intorno all'apertura incerta nella fase di revisione e confronto fra coppie candidate, mantenendo immagine globale e controllo di isolamento; da implementare/testare prima di un'altra prova pagata. L'AI non ha risolto autonomamente neppure i servizi: non promuovere gli involucri selezionati manualmente come automazione completa. Ampliare con le nuove planimetrie autorizzate e separare confronto umano successivo dal risultato autonomo.
+
+Eseguita pipeline su raster reale e provider reale in contesto privato isolato; nessun upload/salvataggio in API/DB del trial scaduto e nessun nuovo E2E browser dichiarato. Nessuna modifica codice prodotto, test suite non ripetuti per questo solo benchmark documentale. Demo Alessio invariata, nessun merge/deploy. La prova non usa il laboratorioHTML precedente né lo aggiorna con un esito fittizio.

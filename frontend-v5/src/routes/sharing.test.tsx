@@ -142,6 +142,8 @@ async function prepare(app: App, homeId: string, opts: { docs: string[]; to: 'ex
 
 describe('[mock] C1a — preparazione e manifesto', () => {
   it('picker: nessuna selezione implicita, origine evidenziata, file altrui disattivati con motivo, privati altrui assenti, paging reale', async () => {
+    // Warm the lazy route before timing interactions with the sharing picker.
+    await import('./DocumentDetailPage');
     const { backend, home, manuale } = await world({ docs: 22 });
     const app = await open(backend, 'giulia@example.test', `/home/${home.id}/documenti/${manuale.id}`);
     await app.user.click(await screen.findByRole('link', { name: 'Condividi…' }));

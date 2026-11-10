@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { PASSWORD_A, PASSWORD_B, renderApp, seededBackend } from '../test/harness';
 import type { FakeBackend } from '../test/fakeBackend';
 import type { renderApp as RenderApp } from '../test/harness';
+// Resolve the account route chunk before timing navigation assertions. Production stays lazy.
+import '../agency-plans/AgencyPages';
 
 async function loginAs(app: ReturnType<typeof RenderApp>, email: string, password: string) {
   await screen.findByRole('heading', { name: 'Accedi' });
@@ -112,15 +114,20 @@ describe('[mock] routing e contesto casa via URL', () => {
     expect(screen.getByRole('link', { name: 'Vai alle mie case' })).toBeInTheDocument();
   });
 
-  // Dopo f7e7b94 Agenzie e Amministratori non compaiono più nella Home: nessun link e nessuna rotta.
-  it('Agenzie e Amministratori non hanno link né rotte', async () => {
+  it('Agenzie ha un ingresso di account separato dalla casa; Amministratori resta assente', async () => {
     const { backend } = seededBackend();
     const app = renderApp({ path: '/accedi', backend });
     await loginAs(app, 'a@example.test', PASSWORD_A);
-    await screen.findByRole('heading', { level: 1 });
-    expect(screen.queryByRole('link', { name: /Agenzie|Amministratori/ })).not.toBeInTheDocument();
+    // Il titolo provvisorio e il link della shell precedono il redirect a /case.
+    // La navigazione esplicita parte quando l'ingresso post-login è concluso.
+    await screen.findByRole('list', { name: 'Case disponibili' });
+    expect(app.router.state.location.pathname).toBe('/case');
+    expect(await screen.findByRole('link', { name: 'Area Agenzie' })).toHaveAttribute('href', '/agenzie');
+    expect(screen.queryByRole('link', { name: /Amministratori/ })).not.toBeInTheDocument();
     await app.router.navigate('/agenzie');
-    expect(await screen.findByRole('heading', { name: 'Pagina non trovata' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Agenzie' })).toBeInTheDocument();
+    expect(app.router.state.location.pathname).toBe('/agenzie');
+    expect(screen.queryByRole('heading', { name: 'Pagina non trovata' })).not.toBeInTheDocument();
   });
 
   it('rotta sconosciuta: pagina non trovata', async () => {

@@ -1,0 +1,46 @@
+import {describe,it,expect} from 'vitest';
+import {contains,roomAt,interiorCandidates,deviceScene,fromClient,sceneFence} from './spatial';
+import {mapFixture,kitchen} from './map-test-fixture';
+describe('posizioni indicative e coordinate della mappa',()=>{
+ it('keeps a dense set of room-associated devices individually represented without coincident indicative anchors or writes',()=>{const data=mapFixture();data.objects=Array.from({length:250},(_,i)=>({id:'device-'+String(i).padStart(3,'0'),name:'Oggetto sintetico '+i,type:'appliance',positionVersion:1,roomIds:[i%2?'room-kitchen':'room-balcony']}));const before=structuredClone(data),scene=deviceScene(data);expect(scene.markers).toHaveLength(250);expect(new Set(scene.markers.map(m=>m.regionId+':'+m.point.join(','))).size).toBe(250);expect(scene.markers.every(m=>m.indicative&&contains(data.rooms.find(r=>r.id===m.regionId)!,m.point))).toBe(true);expect(data).toEqual(before);});
+ it('dense anchors respect concave boundaries and holes while a confirmed appliance remains exactly where the owner put it',()=>{const data=mapFixture();data.rooms[0]!.points=[[0,0],[45,0],[45,10],[20,10],[20,45],[0,45]];data.rooms[0]!.holes=[[[5,15],[15,15],[15,35],[5,35]]];data.objects=Array.from({length:120},(_,i)=>({id:'device-'+String(i).padStart(3,'0'),name:'Oggetto sintetico '+i,type:'appliance',positionVersion:1,roomIds:['room-kitchen']}));data.pins=[{objectId:'device-000',regionId:'kitchen',x:4,y:4,geometryRevision:2,needsReview:false}];const scene=deviceScene(data);expect(scene.markers).toHaveLength(120);expect(new Set(scene.markers.map(m=>m.point.join(','))).size).toBe(120);expect(scene.markers.every(m=>contains(data.rooms[0]!,m.point))).toBe(true);expect(scene.markers.find(m=>m.objectId==='device-000')).toMatchObject({point:[4,4],indicative:false});});
+ it('uses canonical room associations without saving a made-up physical pin',()=>{const data=mapFixture(),before=structuredClone(data),scene=deviceScene(data);expect(scene.markers).toHaveLength(1);expect(scene.markers[0]).toMatchObject({objectId:'fridge',regionId:'kitchen',indicative:true,positionVersion:3});expect(contains(kitchen,scene.markers[0]!.point)).toBe(true);expect(data).toEqual(before);expect(data.pins).toHaveLength(0);});
+ it('spreads devices in one room deterministically and leaves confirmed coordinates unchanged',()=>{const data=mapFixture();data.objects.push({id:'oven',name:'Forno',type:'appliance',positionVersion:1,roomIds:['room-kitchen']});data.pins=[{objectId:'fridge',regionId:'kitchen',x:20,y:20,geometryRevision:2,needsReview:false}];const a=deviceScene(data),b=deviceScene(structuredClone(data));expect(a).toEqual(b);expect(a.markers.find(p=>p.objectId==='fridge')?.point).toEqual([20,20]);expect(a.markers.find(p=>p.objectId==='oven')?.point).not.toEqual([20,20]);});
+ it('does not guess a room from the appliance type or name',()=>{const data=mapFixture();data.objects[0]!.roomIds=[];expect(deviceScene(data).markers).toHaveLength(0);expect(deviceScene(data).unplaced).toHaveLength(1);});
+ it('does not leak archived or unmapped room positions into a different room',()=>{const data=mapFixture();data.rooms[0]!.state='archived';expect(deviceScene(data).markers).toHaveLength(0);data.rooms[0]!.state='active';data.objects[0]!.roomIds=['other-room'];expect(deviceScene(data).markers).toHaveLength(0);});
+ it('represents multiple canonical associations as explicitly indicative markers, not duplicate stored pins',()=>{const data=mapFixture();data.objects[0]!.roomIds=['room-kitchen','room-balcony'];const scene=deviceScene(data);expect(scene.markers).toHaveLength(2);expect(scene.markers.every(p=>p.multipleRooms&&p.indicative)).toBe(true);expect(data.pins).toHaveLength(0);});
+ it('a normal room change makes the old pin inapplicable and shows only an indicative marker in the new room',()=>{const data=mapFixture();data.pins=[{objectId:'fridge',regionId:'kitchen',x:20,y:20,geometryRevision:2,needsReview:true}];data.objects[0]!.roomIds=['room-balcony'];const scene=deviceScene(data);expect(scene.markers).toHaveLength(1);expect(scene.markers[0]).toMatchObject({regionId:'balcony',indicative:true,needsReview:true});expect(data.pins[0]!.x).toBe(20);});
+ it('keeps a stale in-room point unchanged until the owner reconfirms',()=>{const data=mapFixture();data.pins=[{objectId:'fridge',regionId:'kitchen',x:20,y:20,geometryRevision:1,needsReview:true}];expect(deviceScene(data).markers[0]).toMatchObject({point:[20,20],needsReview:true,indicative:false});});
+ it('never places anchors in holes or on walls, including concave and narrow rooms',()=>{const room=structuredClone(kitchen);room.holes=[[[15,15],[35,15],[35,35],[15,35]]];const candidates=interiorCandidates(room);expect(candidates.length).toBeGreaterThan(0);expect(candidates.every(p=>contains(room,p))).toBe(true);expect(contains(room,[20,20])).toBe(false);expect(contains(room,[5,20])).toBe(false);room.holes=[];room.points=[[5,5],[5.001,5],[5.001,95],[5,95]];expect(interiorCandidates(room).length).toBeGreaterThan(0);});
+ it('does not use the bounding box center when it lies outside a concave shape',()=>{const room=structuredClone(kitchen);room.points=[[0,0],[40,0],[40,10],[10,10],[10,40],[0,40]];expect(contains(room,[20,20])).toBe(false);expect(interiorCandidates(room).every(p=>contains(room,p))).toBe(true);});
+ it('detects exact drop room and rejects wall, hole, outside or ambiguous regions',()=>{const data=mapFixture();expect(roomAt(data.rooms,[70,20])?.id).toBe('balcony');for(const p of [[48,20],[5,20],[101,20]] as [number,number][])expect(roomAt(data.rooms,p)).toBeNull();data.rooms.push(structuredClone(data.rooms[0]!));expect(roomAt(data.rooms,[20,20])).toBeNull();});
+ it('maps scrolled and zoomed client coordinates into the same full-page reference',()=>{expect(fromClient(800,250,{left:100,top:50,width:1000,height:1000},{width:100,height:100})).toEqual([70,20]);expect(fromClient(800,250,{left:-600,top:-150,width:2000,height:2000},{width:100,height:100})).toEqual([70,20]);expect(fromClient(1,1,{left:0,top:0,width:0,height:1},{width:100,height:100})).toBeNull();});
+ it('gesture fence binds geometry revision and current room placement version',()=>{const data=mapFixture(),before=sceneFence(data);data.objects[0]!.positionVersion++;expect(sceneFence(data)).not.toBe(before);const next=sceneFence(data);data.geometryRevision++;expect(sceneFence(data)).not.toBe(next);});
+ it('converts explicit client vectors on every non-square display orientation back to canonical coordinates',()=>{
+  const f={width:100,height:200};
+  expect(fromClient(450,150,{left:100,top:50,width:500,height:1000},f,0)).toEqual([70,20]);
+  expect(fromClient(1000,400,{left:100,top:50,width:1000,height:500},f,1)).toEqual([70,20]);
+  expect(fromClient(250,950,{left:100,top:50,width:500,height:1000},f,2)).toEqual([70,20]);
+  expect(fromClient(200,200,{left:100,top:50,width:1000,height:500},f,3)).toEqual([70,20]);
+ });
+ it('retains inverse rotation after zoom/scroll and does not clamp invalid display points into a room',()=>{
+  const f={width:100,height:200};
+  expect(fromClient(1200,550,{left:-600,top:-150,width:2000,height:1000},f,1)).toEqual([70,20]);
+  expect(fromClient(1000,575,{left:100,top:50,width:1000,height:500},f,1)).toEqual([105,20]);
+  expect(fromClient(1000,400,{left:100,top:50,width:0,height:500},f,1)).toBeNull();
+ });
+ it('maps explicit cropped and rotated client vectors into the original full-page coordinates',()=>{
+  const crop={x:100,y:200,width:300,height:100};
+  expect(fromClient(130,80,{left:10,top:20,width:600,height:200},crop,0)).toEqual([160,230]);
+  expect(fromClient(150,140,{left:10,top:20,width:200,height:600},crop,1)).toEqual([160,230]);
+  expect(fromClient(490,160,{left:10,top:20,width:600,height:200},crop,2)).toEqual([160,230]);
+  expect(fromClient(70,500,{left:10,top:20,width:200,height:600},crop,3)).toEqual([160,230]);
+ });
+ it('retains the crop origin through zoom and scroll without clamping coordinates',()=>{
+  const crop={x:100,y:200,width:300,height:100};
+  expect(fromClient(130,160,{left:-150,top:-80,width:400,height:1200},crop,1)).toEqual([160,230]);
+  expect(fromClient(0,0,{left:10,top:20,width:600,height:200},crop,0)).toEqual([95,190]);
+  expect(fromClient(230,10,{left:10,top:20,width:200,height:600},crop,1)).toEqual([95,190]);
+  expect(fromClient(150,140,{left:10,top:20,width:200,height:0},crop,1)).toBeNull();
+ });
+});
