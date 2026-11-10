@@ -89,8 +89,17 @@ it('publishes corrected joined walls and replaces their two strokes and the inne
  expect(bands).toHaveLength(1);
  expect(bands[0]).toContainEqual([49,96]);
  expect(bands[0]).toContainEqual([53,96]);
- expect(listingPublicationSegments(drawing[0]!,drawing[0],covered,perimeter)).toEqual([[[48,80],[10,80]]]);
- expect(listingPublicationSegments(drawing[1]!,drawing[1],covered,perimeter)).toEqual([[[90,80],[52,80]]]);
+ expect(listingPublicationSegments(drawing[0]!,drawing[0],covered,perimeter)).toEqual([]);
+ expect(listingPublicationSegments(drawing[1]!,drawing[1],covered,perimeter)).toEqual([]);
+});
+
+it('extends ordinary partitions to their adjoining facade without bridging another room',()=>{
+ const a=room('a',[[10,10],[48,10],[48,80],[10,80]]);
+ const b=room('b',[[52,10],[90,10],[90,80],[52,80]]);
+ const outline=room('gross',[[4,4],[96,4],[96,96],[4,96]]);
+ expect(listingPublicationSegments(a,a,new Map(),outline,[a,b])).toEqual([[[48,4],[48,96]]]);
+ const passage=room('passage',[[40,84],[60,84],[60,91],[40,91]]);
+ expect(listingPublicationSegments(a,a,new Map(),outline,[a,b,passage])).toEqual([[[48,4],[48,80]]]);
 });
 
 describe('listing illustration',()=>{

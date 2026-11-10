@@ -609,10 +609,43 @@ export function listingPublicationWalls(rooms:PlanShape[],reviews:WallReview[],p
  return {bands:bands.filter(band=>band!==null),covered};
 }
 
-export function listingPublicationSegments(room:PlanShape,original:PlanShape|undefined,covered:Map<string,Segment[]>,perimeter?:PlanShape){
- const outside=perimeter?[perimeter.points,...perimeter.holes].flatMap(edges):[];
+export function listingPublicationSegments(room:PlanShape,original:PlanShape|undefined,covered:Map<string,Segment[]>,perimeter?:PlanShape,rooms:PlanShape[]=[]){
+ const outside=perimeter&&!isAppurtenance(room)&&room.kind!=='excluded'?[perimeter.points,...perimeter.holes].flatMap(edges):[];
  const sourceEdges=original?edges(original.points):[];
- return [...room.holes.flatMap(edges),...edges(room.points).flatMap((side,index)=>{
+ const sides=edges(room.points),winding=Math.sign(signedArea(room.points));
+ const facades=sides.map(side=>{
+  const [a,b]=side,length=distance(a,b);
+  if(length<EPSILON)return [];
+  return outside.flatMap(edge=>{
+   const run=distance(...edge);
+   if(run<EPSILON)return [];
+   const projection=edge.map(point=>fraction(point,side)).sort((x,y)=>x-y);
+   const from=Math.max(0,projection[0]!),to=Math.min(1,projection[1]!);
+   if((to-from)*length<Math.min(length,run)*.65||(projection[1]!-projection[0]!)*length<run*.99)return [];
+   if(edge.every(point=>cross(a,b,point)*winding>EPSILON))return [];
+   const limit=Math.min(36,Math.max(18,length*.28));
+   return [from,to].every(t=>Math.abs(cross(...edge,at(side,t)))/run<=limit)?[{edge,from,to,limit}]:[];
+  });
+ });
+ function meetFacade(point:Point,direction:Point,adjacent:number){
+  let end=point,nearest=Infinity;
+  for(const {edge:[a,b],limit} of facades[(adjacent+sides.length)%sides.length]??[]){
+   const tip:Point=[point[0]+direction[0],point[1]+direction[1]];
+   const start=cross(point,tip,a),finish=cross(point,tip,b);
+   if(Math.abs(start-finish)<EPSILON)continue;
+   const across=start/(start-finish);
+   if(across<0||across>1)continue;
+   const hit=at([a,b],across);
+   const advance=(hit[0]-point[0])*direction[0]+(hit[1]-point[1])*direction[1];
+   if(advance<=EPSILON||advance>limit||advance>=nearest)continue;
+   if(rooms.some(other=>other.id!==room.id&&other.kind!=='excluded'&&
+    (insideShape(at([point,hit],.5),other)||edges(other.points).some(side=>segmentsConflict([point,hit],side)))))continue;
+   end=hit;
+   nearest=advance;
+  }
+  return end;
+ }
+ return [...room.holes.flatMap(edges),...sides.flatMap((side,index)=>{
   const [a,b]=side,length=distance(a,b);
   if(length<EPSILON)return [];
   const matchingIndex=room.points.length===original?.points.length?index:
@@ -620,27 +653,21 @@ export function listingPublicationSegments(room:PlanShape,original:PlanShape|und
   const source=sourceEdges[matchingIndex];
   const intervals=(source?covered.get(JSON.stringify([room.id,matchingIndex]))??[]:[]).map(([start,end])=>
    [fraction(start,source!),fraction(end,source!)].sort((x,y)=>x-y));
-  if(perimeter&&!isAppurtenance(room)&&room.kind!=='excluded'){
-   for(const edge of outside){
-    const run=distance(...edge);
-    if(run<EPSILON)continue;
-    const projection=edge.map(point=>fraction(point,side)).sort((x,y)=>x-y);
-    const from=Math.max(0,projection[0]!),to=Math.min(1,projection[1]!);
-    if((to-from)*length<Math.min(length,run)*.65||Math.abs(projection[1]!-projection[0]!)*length<run*.99)continue;
-    const winding=Math.sign(signedArea(room.points));
-    if(edge.every(point=>cross(a,b,point)*winding>EPSILON))continue;
-    const limit=Math.min(28,length*.28);
-    if([from,to].every(t=>Math.abs(cross(...edge,at(side,t)))/run<=limit))intervals.push([from,to]);
-   }
-  }
+  for(const {from,to} of facades[index]!)intervals.push([from,to]);
+  const direction:Point=[(b[0]-a[0])/length,(b[1]-a[1])/length];
   const remaining:Segment[]=[];
+  const add=(from:number,to:number)=>{
+   const start=from===0?meetFacade(a,[-direction[0],-direction[1]],index-1):at(side,from);
+   const end=to===1?meetFacade(b,direction,index+1):at(side,to);
+   remaining.push([start,end]);
+  };
   let cursor=0;
   for(const [start,end] of intervals.sort((x,y)=>x[0]!-y[0]!)){
    const from=unit(start!),to=unit(end!);
-   if(from>cursor+EPSILON)remaining.push([at(side,cursor),at(side,from)]);
+   if(from>cursor+EPSILON)add(cursor,from);
    cursor=Math.max(cursor,to);
   }
-  if(cursor<1-EPSILON)remaining.push([at(side,cursor),b]);
+  if(cursor<1-EPSILON)add(cursor,1);
   return remaining;
  })];
 }

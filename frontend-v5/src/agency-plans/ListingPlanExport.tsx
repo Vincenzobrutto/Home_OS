@@ -69,7 +69,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
   outdoorWalls.lineTo(...position(b));
  }
  const interior=drawing.filter(room=>!outdoor.includes(room));
- const remaining=gross||useReviewedGeometry?interior.flatMap(room=>listingPublicationSegments(room,rooms.find(source=>source.id===room.id),covered,gross)):listingWalls(interior);
+ const remaining=gross||useReviewedGeometry?interior.flatMap(room=>listingPublicationSegments(room,rooms.find(source=>source.id===room.id),covered,gross,drawing)):listingWalls(interior);
  for (const [a,b] of remaining) {
   const onBounds = ([axis,value]: [number,number]) =>
    Math.abs(a[axis]!-value)<1e-6 && Math.abs(b[axis]!-value)<1e-6;
