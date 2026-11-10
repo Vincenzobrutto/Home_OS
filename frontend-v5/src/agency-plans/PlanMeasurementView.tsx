@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import {createPortal} from 'react-dom';
 import type {PlanMeasurementReport} from './api';
 import type {MeasurementConfiguration} from './measurement-types';
@@ -9,8 +9,8 @@ import styles from './plan-measurement.module.css';
 export type Point=[number,number];
 export type PlanShape={kind?:string;id:string;label:string;points:Point[];holes:Point[][];symbols?:Array<{id:string;reason:string;point?:Point}>};
 export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];perimeter:PlanShape|null;issues:string[];hideRoomSummary?:boolean;initialView?:'rooms'|'perimeter';onChange:(view:'rooms'|'perimeter',shape:PlanShape)=>void;onCreatePerimeter:()=>void;readOnly?:boolean;drawingOnly?:boolean;simple?:boolean;onAddRoom?:()=>void;onSaveGeometry?:()=>void;hasUnsavedChanges?:boolean;onRemoveRoom?:(shape:PlanShape)=>void;configuration?:MeasurementConfiguration|null;measurement?:PlanMeasurementReport|null;measurementsOutdated?:boolean;candidateIds?:string[];excludedCandidateIds?:string[];
- /** Simple map only: faint, non-interactive outlines shown for context (e.g. rooms under the gross perimeter). */
- contextShapes?:PlanShape[];warnIds?:string[];mapLabel?:string;toolbarActions?:ReactNode;toolbarHost?:HTMLElement|null;onDiscard?:()=>void;
+ /** Simple map only: non-interactive outlines for the apartment rooms. */
+ contextShapes?:PlanShape[];frameApartment?:boolean;warnIds?:string[];mapLabel?:string;toolbarActions?:ReactNode;toolbarHost?:HTMLElement|null;onDiscard?:()=>void;
  /** Changing `key` selects the shape, brings it into view and marks `point` when known. */
  focus?:{id:string;point?:Point;preferSingleHole?:boolean;key:number;number?:number;wholePage?:boolean}|null};
 const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(',')).join('L')+'Z').join('');
@@ -50,6 +50,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   if(target?.wholePage){setZoom(1);setSelection(null);setRemoveId(null);setVertex(null);setInsert(false);}
   else if(target?.number!==undefined)setZoom(current=>Math.max(current,3));
   const targetShape=target&&shapes.find(shape=>shape.id===target.id);
+  if(props.frameApartment&&target?.id==='gross'&&!targetShape&&!props.hasUnsavedChanges){setSelection(null);setRemoveId(null);setVertex(null);setInsert(false);}
   if(targetShape&&!(props.hasUnsavedChanges&&selected?.id!==targetShape.id)){
    const point=target?.point;
    const holeIndex=point
@@ -70,7 +71,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
  ]:null);
  useEffect(()=>{
   const target=props.focus,scroll=scrollRef.current,map=mapRef.current;
-  if(!target)return;
+  if(!target||props.frameApartment)return;
   const point=focusPoint;
   if(scroll&&target.wholePage){scroll.scrollLeft=0;scroll.scrollTop=0;}
   else if(scroll&&map&&point){
@@ -84,6 +85,32 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   scroll?.scrollIntoView?.({block:'nearest',behavior:'smooth'});
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[focusKey]);
+ const frame=useRef<{request:string;zoom:number;complete:boolean}|null>(null);
+ useLayoutEffect(()=>{
+  if(!props.frameApartment)return;
+  const target=props.focus;
+  const request=target?`${target.id}:${target.key}`:'apartment';
+  const scroll=scrollRef.current,map=mapRef.current;
+  if((frame.current?.request===request&&frame.current.complete)||!scroll||!map||!scroll.clientWidth||!scroll.clientHeight)return;
+  const subject=target&&props.rooms.find(room=>room.id===target.id);
+  const points=subject?.points??props.perimeter?.points??props.contextShapes?.flatMap(room=>room.points);
+  if(!points?.length)return;
+  const xs=points.map(([x])=>x),ys=points.map(([,y])=>y);
+  const left=Math.min(...xs),right=Math.max(...xs),top=Math.min(...ys),bottom=Math.max(...ys);
+  const rect=map.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
+  const fit=Math.min(
+   scroll.clientWidth*.8/Math.max(1,(right-left)*rect.width/props.width),
+   scroll.clientHeight*.8/Math.max(1,(bottom-top)*rect.height/props.height),
+  );
+  if(frame.current?.request!==request)frame.current={request,zoom:Math.max(1,Math.min(MAX_PLAN_ZOOM,Math.floor(zoom*fit*4)/4)),complete:false};
+  if(frame.current.zoom!==zoom){setZoom(frame.current.zoom);return;}
+  frame.current.complete=true;
+  const viewport=scroll.getBoundingClientRect();
+  scroll.scrollLeft+=rect.left+(left+right)/2*rect.width/props.width-viewport.left-scroll.clientLeft-scroll.clientWidth/2;
+  scroll.scrollTop+=rect.top+(top+bottom)/2*rect.height/props.height-viewport.top-scroll.clientTop-scroll.clientHeight/2;
+  if(target)scroll.scrollIntoView?.({block:'nearest',behavior:'smooth'});
+ },[props.frameApartment,props.focus,props.rooms,props.perimeter,props.contextShapes,props.width,props.height,zoom,setZoom,mapRef,scrollRef]);
  const issueNumber=props.focus?.number;
  const marker=props.focus?.wholePage?null:issueNumber===undefined?props.focus?.point:focusPoint;
  const markerScale=1/(mapScale??(500/props.width));
@@ -178,7 +205,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   {!props.simple&&view==='perimeter'&&!props.perimeter&&<div className={styles.warning}><p>Il perimetro lordo non è ancora disponibile. La somma degli interni non lo sostituisce.</p><button type="button" disabled={props.readOnly} onClick={props.onCreatePerimeter}>Definisci perimetro</button></div>}
   {props.simple&&<>
    {props.toolbarHost?createPortal(toolbar,props.toolbarHost):toolbar}
-   <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {insert?'Fai clic sul contorno per aggiungere un punto.':props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':ringIndex>0?'Modifica i punti del vuoto o includi tutta l’area nel vano.':'Trascina i punti, oppure selezionali con Tab e spostali con le frecce.')}</>:(props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')} Zoom con Ctrl + rotellina.</p>
+   <p className={styles.editHint}>{selected?<><strong>{selected.label}</strong> · {insert?'Fai clic sul contorno per aggiungere un punto.':props.hasUnsavedChanges?'Modifiche da salvare.':(props.readOnly?'Solo consultazione.':ringIndex>0?'Modifica i punti del vuoto o includi tutta l’area nel vano.':'Trascina i punti, oppure selezionali con Tab e spostali con le frecce.')}</>:(props.frameApartment?'Seleziona il perimetro lordo o una pertinenza.':props.readOnly?'Seleziona un vano per consultarlo.':'Tocca un vano per modificarlo.')} Zoom con Ctrl + rotellina.</p>
   </>}
   <div className={styles.controls} hidden={!!props.simple||(!!props.readOnly&&!!props.drawingOnly)}>
    {shapes.length>0&&<label>Geometria<select aria-label="Geometria" value={selected?.id||''} onChange={e=>{setRemoveId(null);setSelection(e.target.value);setRingIndex(0);setVertex(null);}}>{shapes.map(s=><option value={s.id} key={s.id}>{s.label}</option>)}</select></label>}
@@ -190,12 +217,12 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   </div>
   {!props.readOnly&&selected&&removeId===selected.id&&<div role="group" aria-label="Conferma eliminazione vano"><p>Eliminare {selected.label} dalla mappa? Il computo va verificato di nuovo.</p><button type="button" onClick={()=>{setRemoveId(null);props.onRemoveRoom?.(selected);}}>Conferma eliminazione</button><button type="button" onClick={()=>setRemoveId(null)}>Annulla eliminazione</button></div>}
   <div ref={scrollRef} className={props.simple?styles.scroll+' '+styles.simpleScroll:styles.scroll}>
-   <div className={props.simple?styles.mapStage:undefined} data-review-focus={props.simple&&zoom>1&&issueNumber!==undefined&&!!marker||undefined}>
+   <div className={props.simple?styles.mapStage:undefined} data-review-focus={props.simple&&zoom>1&&(props.frameApartment||issueNumber!==undefined&&!!marker)||undefined}>
    <svg ref={mapRef} role="img" aria-label={props.mapLabel??(view==='rooms'?'Contorni dei singoli vani':'Perimetro lordo commerciale')} viewBox={`0 0 ${props.width} ${props.height}`} style={{width:props.simple?`min(${zoom*100}cqw, ${zoom*65*props.width/props.height}vh)`:`${zoom*100}%`}}
    onPointerMove={moveVertex} onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={stopDrag}>
    <image href={props.sourceUrl} x="0" y="0" width={props.width} height={props.height}/>
-   {showLines&&props.contextShapes?.map(s=><path key={'context-'+s.id} data-testid={`context-${s.id}`} d={path(s)} fill="none" stroke="#7d8f8c" strokeDasharray="5 4" strokeWidth={Math.max(props.width/1200,1)} pointerEvents="none"/>)}
-   {showLines&&shapes.map(s=><path key={s.id} data-testid={`shape-${s.id}`} d={path(s)} fill={props.excludedCandidateIds?.includes(s.id)?'none':props.candidateIds?.includes(s.id)||props.warnIds?.includes(s.id)?'rgba(255,155,0,.2)':'rgba(0,125,154,.08)'} fillRule="evenodd" strokeDasharray={props.excludedCandidateIds?.includes(s.id)?'6 4':undefined} stroke={props.excludedCandidateIds?.includes(s.id)?'#87948f':props.candidateIds?.includes(s.id)||props.warnIds?.includes(s.id)?'#b76b00':s.id===selected?.id?'#006d80':'#c73572'} strokeWidth={Math.max(props.width/800,1)} role={props.simple?'button':undefined} aria-label={props.simple?'Seleziona vano '+s.label:undefined} tabIndex={props.simple?0:undefined} onClick={()=>selectShape(s.id)} onKeyDown={e=>{if(props.simple&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selectShape(s.id);}}}/>)}
+   {showLines&&props.contextShapes?.map(s=><path key={'context-'+s.id} data-testid={`context-${s.id}`} d={path(s)} className={props.frameApartment?styles.apartmentRoom:undefined} fill="none" fillRule="evenodd" stroke="#7d8f8c" strokeDasharray="5 4" strokeWidth={Math.max(props.width/1200,1)} pointerEvents="none"/>)}
+   {showLines&&shapes.map(s=><path key={s.id} data-testid={`shape-${s.id}`} className={props.frameApartment&&!props.warnIds?.includes(s.id)?s.id===props.perimeter?.id?styles.apartmentPerimeter:styles.appurtenance:undefined} data-selected={s.id===selected?.id||undefined} d={path(s)} fill={props.excludedCandidateIds?.includes(s.id)?'none':props.candidateIds?.includes(s.id)||props.warnIds?.includes(s.id)?'rgba(255,155,0,.2)':'rgba(0,125,154,.08)'} fillRule="evenodd" strokeDasharray={props.excludedCandidateIds?.includes(s.id)?'6 4':undefined} stroke={props.excludedCandidateIds?.includes(s.id)?'#87948f':props.candidateIds?.includes(s.id)||props.warnIds?.includes(s.id)?'#b76b00':s.id===selected?.id?'#006d80':'#c73572'} strokeWidth={Math.max(props.width/800,1)} role={props.simple?'button':undefined} aria-label={props.simple?'Seleziona vano '+s.label:undefined} tabIndex={props.simple?0:undefined} onClick={()=>selectShape(s.id)} onKeyDown={e=>{if(props.simple&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selectShape(s.id);}}}/>)}
    {showLines&&selected&&!props.readOnly&&insert&&ring.map(([x,y],i)=>{
     const [nextX,nextY]=ring[(i+1)%ring.length]!;
     return <line key={i} role="button" aria-label={`Inserisci punto sul lato ${i+1}`} tabIndex={0}

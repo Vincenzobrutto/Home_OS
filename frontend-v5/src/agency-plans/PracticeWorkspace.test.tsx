@@ -227,7 +227,7 @@ it('opens a ready plan on the calculation, with saved balcony cover and sheet sc
  expect(screen.getByRole('radio',{name:'Scoperto'})).toBeChecked();
  const summary=screen.getByRole('group',{name:'Stima della superficie commerciale'});
  expect(summary).toHaveTextContent('Scala 1:100 su foglio A4 intero');
- expect(summary).toHaveTextContent('Lordo appartamento1,0 m²');
+ expect(summary).toHaveTextContent('AppartamentoPerimetro lordo1,0 m²');
  expect(summary).toHaveTextContent('Totale stimato1,5 m²');
  expect(screen.getByRole('button',{name:'Stima salvata'})).toBeDisabled();
 });

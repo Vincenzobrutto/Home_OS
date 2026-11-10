@@ -116,11 +116,11 @@ export function QuickSurfaceEstimate(p:Props){
  return <section className={styles.surfacePanel} aria-label="Calcola superfici">
   <div className={styles.estimateCard} aria-label="Stima della superficie commerciale" role="group">
    <dl className={styles.estimateRows}>
-    <div><dt>Scala usata</dt><dd>{hasScale?basis:reading?'Lettura del documento…':'Da indicare'}</dd></div>
-    <div><dt>{p.gross?`Lordo appartamento${p.gross.status==='proposed'?' · proposto':p.gross.status==='draft'?' · in modifica':''}`:`Lordo stimato · vani + muri ${wallPercent}%`}</dt><dd>{hasScale?number(gross)+' m²':'—'}</dd></div>
+    <div><dt>Appartamento<small>{p.gross?p.gross.status==='proposed'?'Perimetro lordo proposto':p.gross.status==='draft'?'Perimetro lordo in modifica':'Perimetro lordo':`Somma dei vani + ${wallPercent}% per i muri`}</small></dt><dd>{hasScale?number(gross)+' m²':'—'}</dd></div>
     <div><dt>Pertinenze ponderate</dt><dd>{hasScale?number(appurtenanceTotal)+' m²':'—'}</dd></div>
     <div className={styles.estimateTotal}><dt>Totale stimato</dt><dd>{hasScale?number(gross+appurtenanceTotal)+' m²':'—'}</dd></div>
    </dl>
+   <p className={styles.muted}>Scala usata · {hasScale?basis:reading?'Lettura del documento…':'Da indicare'}</p>
    {missingCover.length>0&&hasScale&&<p className={styles.muted}>Scegli Coperto o Scoperto per {missingCover.map(row=>row.room.label).join(', ')}: finché manca, il balcone non entra nel totale.</p>}
    {overlapIds.length>0&&<p role="alert" className={styles.inlineWarning}>Rischio di doppio conteggio: {rows.filter(row=>row.overlap).map(row=>row.room.label).join(', ')} si sovrappone al perimetro lordo. Controlla il perimetro sulla mappa: il contorno a rischio è in arancione.</p>}
    <div className={styles.saveRow}>
@@ -129,8 +129,8 @@ export function QuickSurfaceEstimate(p:Props){
    </div>
   </div>
 
-  <section aria-labelledby="scale-heading" className={styles.panelSection}>
-   <h4 id="scale-heading">Scala</h4>
+  <details className={styles.panelSection} open={!hasScale||undefined}>
+   <summary>Modifica scala</summary>
    {reading&&!bar&&<p role="status">Cerco barra metrica e scala sul documento, senza invii esterni…</p>}
    {bar&&<p><strong>{basis}</strong></p>}
    {bar&&bar.method!=='manual'&&<svg className={styles.scaleReference} role="img" aria-label="Riferimento usato per la scala" viewBox={`${Math.max(0,Math.min(bar.start[0],bar.end[0])-40)} ${Math.max(0,Math.min(bar.start[1],bar.end[1])-50)} ${Math.abs(bar.end[0]-bar.start[0])+80} ${Math.abs(bar.end[1]-bar.start[1])+100}`}><image href={p.sourceUrl} width={p.width} height={p.height}/><line x1={bar.start[0]} y1={bar.start[1]} x2={bar.end[0]} y2={bar.end[1]} stroke="#006476" strokeWidth="3"/></svg>}
@@ -149,7 +149,7 @@ export function QuickSurfaceEstimate(p:Props){
     {!usePaper&&<button type="button" disabled={p.busy} onClick={()=>setMode('paper')}>Usa scala e formato del foglio</button>}
     {mode!=='auto'&&<button type="button" disabled={p.busy} onClick={()=>setMode('auto')}>Torna alla scala del documento</button>}
    </div>
-  </section>
+  </details>
 
   <section aria-labelledby="gross-heading" className={styles.panelSection}>
    <h4 id="gross-heading">Perimetro lordo dell’appartamento</h4>

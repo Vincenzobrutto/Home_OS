@@ -22,7 +22,7 @@ it('shows scale, gross, appurtenances and total together from a detected bar, wi
  render(<Estimate {...props()}/>);
  await waitFor(()=>expect(total()).toBe('110,0 m²'));
  expect(summary()).toHaveTextContent('Barra metrica del documento · 10 m');
- expect(summary()).toHaveTextContent('Lordo stimato · vani + muri 10%110,0 m²');
+ expect(summary()).toHaveTextContent('AppartamentoSomma dei vani + 10% per i muri110,0 m²');
  expect(summary()).toHaveTextContent('Pertinenze ponderate0,0 m²');
  expect(screen.getByRole('table',{name:'Superfici dei vani'})).toHaveTextContent('100,0 m²');
  expect(screen.getAllByRole('table')).toHaveLength(1);
@@ -64,6 +64,7 @@ it('recalibrates with two points on the map and returns to the document scale',a
  const user=userEvent.setup(),options=props();
  render(<Estimate {...options}/>);
  await waitFor(()=>expect(total()).toBe('110,0 m²'));
+ await user.click(screen.getByText('Modifica scala'));
  options.requestSegment.mockImplementationOnce(done=>done([0,0],[200,0]));
  await user.click(screen.getByRole('button',{name:'Correggi con due punti sulla mappa'}));
  await user.type(screen.getByLabelText('Lunghezza reale tra i due punti (m)'),'10');
@@ -83,7 +84,7 @@ it('adds an existing balcony with its cover, coefficient and contribution, and n
  expect(screen.getByText(/4,0 m² × 25% =/)).toBeVisible();
  await user.click(screen.getByRole('radio',{name:'Coperto'}));
  expect(total()).toBe('101,4 m²');
- expect(summary()).toHaveTextContent('Lordo appartamento100,0 m²');
+ expect(summary()).toHaveTextContent('AppartamentoPerimetro lordo100,0 m²');
  expect(screen.getByRole('table',{name:'Superfici dei vani'})).toHaveTextContent('Compreso nel lordo');
  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
@@ -93,7 +94,7 @@ it('flags a balcony overlapping the gross outline as a double count risk',async(
  const gross={id:'gross',label:'Perimetro lordo proposto',points:[[0,0],[110,0],[110,100],[0,100]] as [number,number][],holes:[]};
  render(<Estimate {...props()} rooms={[room,balcony]} gross={{shape:gross,status:'proposed'}}/>);
  expect(await screen.findByText(/Rischio di doppio conteggio: Balcone/)).toBeVisible();
- expect(summary()).toHaveTextContent('Lordo appartamento · proposto');
+ expect(summary()).toHaveTextContent('AppartamentoPerimetro lordo proposto');
 });
 
 it('saves covers and the scale in use in one action, then reads the saved choice back as saved',async()=>{

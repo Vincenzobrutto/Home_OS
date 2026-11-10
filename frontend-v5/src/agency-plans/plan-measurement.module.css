@@ -28,6 +28,10 @@
 
 .simpleScroll{container-type:inline-size;scroll-margin-top:calc(var(--plan-command-height,0px) + 8px)}
 .simpleScroll svg{min-width:0;margin:0 auto}
+.apartmentRoom{fill:#00748635;stroke:#136575;stroke-dasharray:none;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.apartmentPerimeter{fill:#0074860c;stroke:#006476;stroke-width:3;vector-effect:non-scaling-stroke}
+.appurtenance{fill:#7553a222;stroke:#74529b;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.appurtenance[data-selected]{stroke-width:3}
 .mapStage{display:flow-root;width:max-content;min-width:100%;box-sizing:content-box}
 /* Give the map room to pan by half a viewport even at the edges of the sheet. */
 .mapStage[data-review-focus=true]{padding:32.5vh 50cqw}

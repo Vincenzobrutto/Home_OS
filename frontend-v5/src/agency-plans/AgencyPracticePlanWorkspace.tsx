@@ -151,7 +151,7 @@ function Workspace(p:WorkspaceProps){
   const switchBlocked=manualOpen||!!builder||!!draft||configDirty||!!pending||busy;
   const accessories=rooms.filter(isAppurtenance),principals=rooms.filter(room=>!isAppurtenance(room));
   const drawStep=!rooms.length?'Aggiungi il primo vano sulla mappa.':entries.length?`Controlla ${entries.length===1?'la verifica aperta':`le ${entries.length} verifiche aperte`}: seleziona una scheda per vedere il punto o il contorno sulla mappa.`:'Nessuna verifica aperta: passa a Calcola superfici.';
-  const measureStep=!gross?'Nessun perimetro proposto: disegnalo sulla mappa, oppure usa la stima dai vani.':gross.status==='proposed'?'Controlla il perimetro proposto sulla mappa, scegli la copertura dei balconi e premi Salva stima.':gross.status==='draft'?'Perimetro modificato: premi Salva stima per confermarlo.':plan.quickEstimate?'Stima salvata. Selezionando un contorno puoi correggerlo: la stima si aggiorna da sola.':'Scegli la copertura dei balconi e premi Salva stima.';
+  const measureStep=!gross?(principals.length?'L’appartamento è evidenziato sulla mappa. Puoi disegnare il perimetro lordo per affinare la stima.':'Definisci il perimetro lordo o aggiungi i vani dell’appartamento in Modifica pianta.'):gross.status==='proposed'?'Controlla il perimetro proposto sulla mappa, scegli la copertura dei balconi e premi Salva stima.':gross.status==='draft'?'Perimetro modificato: premi Salva stima per confermarlo.':plan.quickEstimate?'Stima salvata. Selezionando un contorno puoi correggerlo: la stima si aggiorna da sola.':'Scegli la copertura dei balconi e premi Salva stima.';
   const nextStep=task==='draw'?drawStep:task==='measure'?measureStep:'Controlla l’anteprima, conferma che la pianta è completa e scarica l’immagine.';
   const tasks=[['draw','Modifica pianta'],['measure','Calcola superfici'],['listing','Pianta per annuncio']] as const;
   const measuring=task==='measure';
@@ -168,7 +168,7 @@ function Workspace(p:WorkspaceProps){
    sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height}
    rooms={showProposal?proposal!.rooms:measuring?accessories:rooms}
    perimeter={measuring?gross?.shape??null:null}
-   contextShapes={measuring?principals:undefined}
+   contextShapes={measuring?principals:undefined} frameApartment={measuring}
    warnIds={measuring?doubleCountIds(rooms,gross?.shape??null):undefined}
    mapLabel={measuring?'Perimetro lordo e pertinenze':undefined}
    candidateIds={showProposal?proposal!.coverage?.candidateIds:undefined} excludedCandidateIds={showProposal?excludedIds:undefined}
@@ -198,6 +198,10 @@ function Workspace(p:WorkspaceProps){
    <p className={styles.nextStep} aria-live="polite">{draft&&task==='draw'?'Modifiche da salvare: salva o scarta prima di cambiare attività.':nextStep}</p>
    <div className={styles.planLayout}>
     <div className={styles.planMapColumn}>
+    {measuring&&sourceUrl&&(gross||principals.length>0||accessories.length>0)&&<div className={styles.surfaceLegend} aria-label="Legenda della mappa">
+     {(gross||principals.length>0)&&<button type="button" disabled={!!draft||!!builder} onClick={()=>show('gross')}><span data-map-key="apartment" aria-hidden="true"/>Inquadra appartamento</button>}
+     {accessories.length>0&&<span><i data-map-key="accessory" aria-hidden="true"/>Pertinenze</span>}
+    </div>}
     {task==='draw'&&graphics&&sourceUrl&&<ListingPlanReview key={plan.id} sourceUrl={sourceUrl} width={rasterSize.width} height={rasterSize.height} hints={openingHints} editPlan saveError={error} rooms={plan.rooms} saved={listingDetails} metresPerPixel={listingScale(scaleInputs)} scaleLabel={scaleInputs.scale?'Scala salvata in Calcola superfici':'Scala del computo'} disabled={locked} onClose={()=>setGraphics(false)} onApply={saveGraphics}/>}
     {task==='listing'?<ListingPlanExport key={plan.id+':'+plan.version} rooms={plan.rooms} details={listingDetails} review={listingReview} onSave={saveListing} disabled={locked||!!draft} autoPreview toolbarHost={toolbarHost}/>:map}
     </div>

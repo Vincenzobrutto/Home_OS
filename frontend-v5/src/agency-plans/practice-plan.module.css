@@ -89,10 +89,15 @@
 .issueActions{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
 .issueActions label{flex:1 1 180px;margin:4px 0!important}
 .surfacePanel{display:block}
+.surfaceLegend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
+.surfaceLegend button,.surfaceLegend>span{display:inline-flex;align-items:center;gap:7px}
+.surfaceLegend [data-map-key]{display:inline-block;width:12px;height:12px;border-radius:3px;background:#00748635;border:1px solid #136575}
+.surfaceLegend [data-map-key="accessory"]{background:#7553a222;border-color:#74529b}
 .estimateCard{border:1px solid #9cbbb1;background:#e9f5f1;border-radius:12px;padding:14px;margin:0 0 12px}
 .estimateRows{margin:0;display:grid;gap:4px}
 .estimateRows>div{display:flex;justify-content:space-between;gap:12px;align-items:baseline;border-bottom:1px solid #cfe2dc;padding:4px 0}
 .estimateRows dt{color:#3c5d5f}
+.estimateRows dt small{display:block;color:#45676b;font-size:.85rem}
 .estimateRows dd{margin:0;font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
 .estimateRows .estimateTotal{border-bottom:0}
 .estimateTotal dt{font-weight:700;color:#19363e}

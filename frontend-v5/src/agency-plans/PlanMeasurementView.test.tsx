@@ -40,7 +40,7 @@ it('simple map shows contextual editing only after selecting a room, and offers 
 
 it('zooms around the pointer only with Ctrl+wheel and consumes the gesture at both limits',()=>{
  render(<PlanMeasurementView {...props()} drawingOnly simple/>);
- const map=screen.getByRole('img',{name:'Contorni dei singoli vani'}),viewport=map.parentElement!;
+ const map=screen.getByRole('img',{name:'Contorni dei singoli vani'}),viewport=map.parentElement!.parentElement!;
  const controls=screen.getByRole('group',{name:'Zoom planimetria'});
  const box=()=>{const width=Number(controls.textContent?.match(/(\d+)%/)?.[1]??100);return {width,height:width,left:-viewport.scrollLeft,top:-viewport.scrollTop} as DOMRect;};
  vi.spyOn(map,'getBoundingClientRect').mockImplementation(box);
@@ -60,6 +60,30 @@ it('zooms around the pointer only with Ctrl+wheel and consumes the gesture at bo
  expect(wheel(-100,true)).toBe(false);
  expect(wheel(100)).toBe(true);
  expect(controls).toHaveTextContent('600%');
+});
+
+it('frames the apartment rooms first and zooms in on a separately selected accessory',()=>{
+ const accessory=shape('cantina',75);
+ const options={...props(),simple:true,contextShapes:[shape('camera'),shape('cucina',30)],rooms:[accessory],perimeter:null};
+ const view=render(<PlanMeasurementView {...options}/>);
+ const map=screen.getByRole('img'),viewport=map.parentElement!.parentElement!;
+ const controls=screen.getByRole('group',{name:'Zoom planimetria'});
+ Object.defineProperties(viewport,{clientWidth:{value:100},clientHeight:{value:100}});
+ const rect=(left:number,top:number,size:number)=>({left,top,width:size,height:size}) as DOMRect;
+ vi.spyOn(viewport,'getBoundingClientRect').mockReturnValue(rect(0,0,100));
+ vi.spyOn(map,'getBoundingClientRect').mockImplementation(()=>{
+  const size=Number(controls.textContent?.match(/(\d+)%/)?.[1]??100);
+  return rect(50-viewport.scrollLeft,50-viewport.scrollTop,size);
+ });
+ view.rerender(<PlanMeasurementView {...options} frameApartment/>);
+ expect(controls).toHaveTextContent('200%');
+ expect(viewport.scrollLeft).toBe(40);
+ view.rerender(<PlanMeasurementView {...options} frameApartment focus={{id:'cantina',key:1}}/>);
+ expect(controls).toHaveTextContent('600%');
+ expect(viewport.scrollLeft).toBe(480);
+ expect(screen.getByTestId('shape-cantina')).toHaveAttribute('data-selected','true');
+ fireEvent.click(screen.getByRole('button',{name:'Riduci zoom'}));
+ expect(controls).toHaveTextContent('575%');
 });
 
 it('moves a focused vertex with the arrow keys and keeps context outlines out of the interactive map',()=>{
