@@ -16,7 +16,7 @@ export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;
 const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(',')).join('L')+'Z').join('');
 /** Controlled editor: source URL is supplied only after source authorization; no localStorage or live API side effects. */
 export function PlanMeasurementView(props:PlanMeasurementProps){return <PlanMeasurementEditor key={props.scopeKey} {...props}/>;}
-function PlanMeasurementEditor(props:PlanMeasurementProps){
+function PlanMeasurementEditor({estimateSaveHost,...props}:PlanMeasurementProps){
  const [removeId,setRemoveId]=useState<string|null>(null);
  const [selectedView,setView]=useState<'rooms'|'perimeter'>(props.initialView??'rooms'),[selection,setSelection]=useState<string|null>(null),[ringIndex,setRingIndex]=useState(0),[showLines,setShowLines]=useState(true),[insert,setInsert]=useState(false),[vertex,setVertex]=useState<number|null>(null),[undo,setUndo]=useState<Array<{view:'rooms'|'perimeter';shape:PlanShape}>>([]);
  const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom({requireControl:true});
@@ -185,7 +185,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
     {props.onRemoveRoom&&<button type="button" aria-label="Elimina vano selezionato" disabled={props.readOnly||!selected||selected.id===props.perimeter?.id||props.hasUnsavedChanges} onClick={()=>selected&&setRemoveId(selected.id)}>Elimina</button>}
     <div className={styles.zoomTools} role="group" aria-label="Zoom planimetria" title="Ctrl + rotellina sulla mappa"><button type="button" aria-label="Riduci zoom" disabled={zoom<=1} onClick={()=>setZoom(v=>Math.max(1,v-.25))}>−</button><output aria-live="polite">{Math.round(zoom*100)}%</output><button type="button" aria-label="Aumenta zoom" disabled={zoom>=MAX_PLAN_ZOOM} onClick={()=>setZoom(v=>Math.min(MAX_PLAN_ZOOM,v+.25))}>+</button><button type="button" aria-label="Adatta al riquadro" disabled={zoom===1} onClick={()=>setZoom(1)}>1:1</button></div>
     {props.onDiscard&&props.hasUnsavedChanges&&<button type="button" disabled={props.readOnly} onClick={()=>{props.onDiscard?.();setVertex(null);setUndo([]);}}>Scarta modifiche</button>}
-    {props.estimateSaveHost&&<span className={styles.estimateSaveSlot} ref={props.estimateSaveHost}/>}
+    <span className={styles.estimateSaveSlot} ref={estimateSaveHost}/>
     {props.onSaveGeometry&&<button className={styles.saveAction} type="button" disabled={props.readOnly||!props.hasUnsavedChanges} onClick={props.onSaveGeometry}>Salva modifiche</button>}
     {selected&&!props.readOnly&&<div className={styles.vertexTools} role="group" aria-label="Correzione del vano selezionato">
      {selected.holes.length>0&&<label>Contorno<select aria-label="Contorno" value={ringIndex} onChange={e=>{setRingIndex(Number(e.target.value));setVertex(null);setInsert(false);}}><option value={0}>Esterno</option>{selected.holes.map((_,i)=><option key={i} value={i+1}>Vuoto {i+1}</option>)}</select></label>}
