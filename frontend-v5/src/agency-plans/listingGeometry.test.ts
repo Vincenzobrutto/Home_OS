@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
 import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, placeScaledListingDoor, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
-import {joinedSharedWallBands, listingPublicationSegments, listingPublicationWalls, proposeSharedPlanWalls, recordWallReview, suggestInternalWallThickness} from './listingGeometry';
+import {joinedSharedWallBands, listingFacadeFill, listingFacadeOpposite, listingPublicationSegments, listingPublicationWalls, proposeSharedPlanWalls, recordWallReview, suggestInternalWallThickness} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -89,17 +89,30 @@ it('publishes corrected joined walls and replaces their two strokes and the inne
  expect(bands).toHaveLength(1);
  expect(bands[0]).toContainEqual([49,96]);
  expect(bands[0]).toContainEqual([53,96]);
- expect(listingPublicationSegments(drawing[0]!,drawing[0],covered,perimeter)).toEqual([]);
- expect(listingPublicationSegments(drawing[1]!,drawing[1],covered,perimeter)).toEqual([]);
+ expect(listingPublicationSegments(drawing[0]!,drawing[0],covered,perimeter).segments).toEqual([]);
+ expect(listingPublicationSegments(drawing[1]!,drawing[1],covered,perimeter).segments).toEqual([]);
 });
 
 it('extends ordinary partitions to their adjoining facade without bridging another room',()=>{
  const a=room('a',[[10,10],[48,10],[48,80],[10,80]]);
  const b=room('b',[[52,10],[90,10],[90,80],[52,80]]);
  const outline=room('gross',[[4,4],[96,4],[96,96],[4,96]]);
- expect(listingPublicationSegments(a,a,new Map(),outline,[a,b])).toEqual([[[48,4],[48,96]]]);
+ expect(listingPublicationSegments(a,a,new Map(),outline,[a,b]).segments).toEqual([[[48,4],[48,96]]]);
  const passage=room('passage',[[40,84],[60,84],[60,91],[40,91]]);
- expect(listingPublicationSegments(a,a,new Map(),outline,[a,b,passage])).toEqual([[[48,4],[48,80]]]);
+ const blocked=listingPublicationSegments(a,a,new Map(),outline,[a,b,passage]);
+ expect(blocked.segments).toEqual([[[48,4],[48,80]],[[48,80],[4,80]]]);
+ expect(blocked.walls.some(({projected})=>projected.every(([,y])=>y===96))).toBe(false);
+});
+
+it('fills the perimeter inwards to the partitions and projects an opening through the band',()=>{
+ const a=room('a',[[10,10],[48,10],[48,80],[10,80]]);
+ const b=room('b',[[52,10],[90,10],[90,80],[52,80]]);
+ const outline=room('gross',[[4,4],[96,4],[96,96],[4,96]]);
+ const layout=[a,b].map(item=>listingPublicationSegments(item,item,new Map(),outline,[a,b]));
+ const walls=layout.flatMap(item=>item.walls);
+ expect(listingFacadeFill(walls)).toContainEqual([[52,80],[48,80],[48,96],[52,96]]);
+ expect(layout[0]!.corners).toContainEqual([[10,10],[4,10],[4,4],[10,4]]);
+ expect(listingFacadeOpposite({kind:'window',start:[20,80],end:[36,80]},walls)).toEqual([[20,96],[36,96]]);
 });
 
 describe('listing illustration',()=>{

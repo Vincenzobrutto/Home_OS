@@ -609,6 +609,8 @@ export function listingPublicationWalls(rooms:PlanShape[],reviews:WallReview[],p
  return {bands:bands.filter(band=>band!==null),covered};
 }
 
+type FacadeBand={outer:Segment;inner:Segment;projected:Segment};
+
 export function listingPublicationSegments(room:PlanShape,original:PlanShape|undefined,covered:Map<string,Segment[]>,perimeter?:PlanShape,rooms:PlanShape[]=[]){
  const outside=perimeter&&!isAppurtenance(room)&&room.kind!=='excluded'?[perimeter.points,...perimeter.holes].flatMap(edges):[];
  const sourceEdges=original?edges(original.points):[];
@@ -624,7 +626,11 @@ export function listingPublicationSegments(room:PlanShape,original:PlanShape|und
    if((to-from)*length<Math.min(length,run)*.65||(projection[1]!-projection[0]!)*length<run*.99)return [];
    if(edge.every(point=>cross(a,b,point)*winding>EPSILON))return [];
    const limit=Math.min(36,Math.max(18,length*.28));
-   return [from,to].every(t=>Math.abs(cross(...edge,at(side,t)))/run<=limit)?[{edge,from,to,limit}]:[];
+   const inner:Segment=[at(side,from),at(side,to)];
+   const projected=inner.map(point=>at(edge,unit(fraction(point,edge)))) as Segment;
+   const crossesRoom=inner.some((point,i)=>rooms.some(other=>other.id!==room.id&&other.kind!=='excluded'&&
+    (insideShape(at([point,projected[i]!],.5),other)||edges(other.points).some(border=>segmentsConflict([point,projected[i]!],border)))));
+   return !crossesRoom&&inner.every(point=>Math.abs(cross(...edge,point))/run<=limit)?[{edge,from,to,limit,inner,projected}]:[];
   });
  });
  function meetFacade(point:Point,direction:Point,adjacent:number){
@@ -645,7 +651,7 @@ export function listingPublicationSegments(room:PlanShape,original:PlanShape|und
   }
   return end;
  }
- return [...room.holes.flatMap(edges),...sides.flatMap((side,index)=>{
+ const segments=[...room.holes.flatMap(edges),...sides.flatMap((side,index)=>{
   const [a,b]=side,length=distance(a,b);
   if(length<EPSILON)return [];
   const matchingIndex=room.points.length===original?.points.length?index:
@@ -670,6 +676,57 @@ export function listingPublicationSegments(room:PlanShape,original:PlanShape|und
   if(cursor<1-EPSILON)add(cursor,1);
   return remaining;
  })];
+ const walls:FacadeBand[]=facades.flat().map(({edge,inner,projected})=>({outer:edge,inner,projected}));
+ const corners:Point[][]=[];
+ for(let index=0;index<sides.length;index++){
+  const vertex=room.points[index]!;
+  for(const first of facades[(index+sides.length-1)%sides.length]!.filter(f=>f.to===1)){
+   for(const second of facades[index]!.filter(f=>f.from===0)){
+    if(first.edge===second.edge)continue;
+    const corner=first.edge.find(point=>second.edge.some(other=>samePoint(point,other)));
+    if(!corner||distance(vertex,corner)>Math.max(first.limit,second.limit)*1.45)continue;
+    const polygon=[vertex,first.projected[1],corner,second.projected[0]];
+    if(!rooms.some(other=>other.id!==room.id&&other.kind!=='excluded'&&insideShape(at([vertex,corner],.5),other)))corners.push(polygon);
+   }
+  }
+ }
+ return {segments,walls,corners};
+}
+
+export function listingFacadeFill(walls:FacadeBand[]){
+ const groups=new Map<string,FacadeBand[]>();
+ for(const wall of walls){
+  const key=JSON.stringify(wall.outer);
+  groups.set(key,[...(groups.get(key)??[]),wall]);
+ }
+ const polygons=walls.map(({inner,projected})=>[...inner,projected[1],projected[0]]);
+ for(const group of groups.values()){
+  const ordered=group.map(({outer,inner,projected})=>{
+   const pairs=projected.map((point,index)=>({point,inside:inner[index]!,position:fraction(point,outer)})).sort((a,b)=>a.position-b.position);
+   return {start:pairs[0]!,end:pairs[1]!};
+  }).sort((a,b)=>a.start.position-b.start.position);
+  let previous=ordered[0]!.end;
+  for(const {start,end} of ordered.slice(1)){
+   if(start.position>previous.position&&distance(start.point,previous.point)<=Math.min(8,distance(start.point,start.inside),distance(previous.point,previous.inside)))
+    polygons.push([previous.inside,start.inside,start.point,previous.point]);
+   if(end.position>previous.position)previous=end;
+  }
+ }
+ return polygons;
+}
+
+export function listingFacadeOpposite(opening:ListingOpening,walls:FacadeBand[]):Segment|null{
+ for(const {inner,projected} of walls){
+  for(const [near,far] of [[inner,projected],[projected,inner]] as const){
+   const width=distance(...near);
+   if(width<EPSILON)continue;
+   const points=[opening.start,opening.end];
+   const positions=points.map(point=>fraction(point,near));
+   if(positions.some((t,i)=>t< -EPSILON||t>1+EPSILON||distance(points[i]!,at(near,t))>2))continue;
+   return positions.map(t=>at(far,unit(t))) as Segment;
+  }
+ }
+ return null;
 }
 
 function alignTerraceFrontage(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>){

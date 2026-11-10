@@ -4,7 +4,7 @@ import type {ListingDetails,ListingOpening,ListingPlanDraft,QuickEstimateScale,W
 import type {PlanShape,Point} from './PlanMeasurementView';
 import {isBalcony,paperMetresPerPixel} from './scaleDetection';
 import type {MeasurementConfiguration} from './measurement-types';
-import {listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, listingPublicationSegments, listingPublicationWalls, listingWalls} from './listingGeometry';
+import {listingDoorOpposite, listingFacadeFill, listingFacadeOpposite, listingIllustration, listingOpeningOnDrawing, listingPublicationSegments, listingPublicationWalls, listingWalls} from './listingGeometry';
 import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
@@ -69,7 +69,9 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
   outdoorWalls.lineTo(...position(b));
  }
  const interior=drawing.filter(room=>!outdoor.includes(room));
- const remaining=gross||useReviewedGeometry?interior.flatMap(room=>listingPublicationSegments(room,rooms.find(source=>source.id===room.id),covered,gross,drawing)):listingWalls(interior);
+ const wallLayout=gross||useReviewedGeometry?interior.map(room=>listingPublicationSegments(room,rooms.find(source=>source.id===room.id),covered,gross,drawing)):null;
+ const remaining=wallLayout?wallLayout.flatMap(part=>part.segments):listingWalls(interior);
+ const facadeWalls=wallLayout?.flatMap(part=>part.walls)??[];
  for (const [a,b] of remaining) {
   const onBounds = ([axis,value]: [number,number]) =>
    Math.abs(a[axis]!-value)<1e-6 && Math.abs(b[axis]!-value)<1e-6;
@@ -85,10 +87,28 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
  context.lineWidth = LISTING_PARTITION_STROKE;
  context.stroke(partitions);
  context.fillStyle = context.strokeStyle;
- for(const band of bands){
+ const fillBand=(band:Point[])=>{
   context.beginPath();
   band.forEach((point,index)=>{if(index===0)context.moveTo(...position(point));else context.lineTo(...position(point));});
   context.closePath();context.fill();
+ };
+ bands.forEach(fillBand);
+ if(gross){
+  context.save();
+  context.clip(outlinePath(gross),'evenodd');
+  const mass=new Path2D();
+  const facadePolygons=[...listingFacadeFill(facadeWalls),...(wallLayout?.flatMap(part=>part.corners)??[])];
+  for(const polygon of facadePolygons){
+   const area=polygon.reduce((sum,[x,y],i)=>{
+    const [nextX,nextY]=polygon[(i+1)%polygon.length]!;
+    return sum+x*nextY-y*nextX;
+   },0);
+   const ring=area<0?[...polygon].reverse():polygon;
+   ring.forEach((point,i)=>{if(i===0)mass.moveTo(...position(point));else mass.lineTo(...position(point));});
+   mass.closePath();
+  }
+  context.fill(mass);
+  context.restore();
  }
  context.lineWidth = gross?LISTING_OUTER_STROKE+4:LISTING_OUTER_STROKE;
  context.stroke(gross?outlinePath(gross):perimeter);
@@ -96,7 +116,8 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
  for (const opening of details?.openings??[]) {
   const placed=listingOpeningOnDrawing(opening,walls,originalSpan);
   const start=position(placed.start),end=position(placed.end);
-  const opposite=listingDoorOpposite(placed,drawing,originalSpan*.035);
+  const facadeSide=listingFacadeOpposite(placed,facadeWalls);
+  const opposite=facadeSide??listingDoorOpposite(placed,drawing,originalSpan*.035);
   const oppositePixels=opposite?[position(opposite[0]),position(opposite[1])] as const:null;
   if(Math.hypot(end[0]-start[0],end[1]-start[1])<3)continue;
   const line=(a:Point,b:Point)=>{context.beginPath();context.moveTo(...a);context.lineTo(...b);context.stroke();};
@@ -121,7 +142,10 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
    else line(point,far);
   }
   if(opening.kind==='window'){
-   line(shift(start,-3),shift(end,-3));line(shift(start,3),shift(end,3));
+   const windowCentre=([x,y]:Point,[farX,farY]:Point):Point=>[(x+farX)/2,(y+farY)/2];
+   const a=facadeSide&&oppositePixels?windowCentre(start,oppositePixels[0]):start;
+   const b=facadeSide&&oppositePixels?windowCentre(end,oppositePixels[1]):end;
+   line(shift(a,-3),shift(b,-3));line(shift(a,3),shift(b,3));
   }else{
    context.setLineDash([5,3]);line(start,end);
   }
