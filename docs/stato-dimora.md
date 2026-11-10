@@ -55,4 +55,4 @@ Il lavoro residuo è ordinato nei [prossimi passi](prossimi-passi.md).
 | [63](https://github.com/Vincenzobrutto/Home_OS/pull/63) | Chiusa | Il codice delle etichette è nel comune. [Rapporto storico](https://github.com/Vincenzobrutto/Home_OS/blob/codex/rilascio-spese-etichette-20261026/docs/v5/spese-etichette-rilascio-20261026.md). |
 | [80](https://github.com/Vincenzobrutto/Home_OS/pull/80) | Integrata | Ricevuta storica del rilascio locale del 3 novembre e dell’attivazione Agenzie e Gift del 4 novembre. |
 
-I checkout e i rami già contenuti nel comune sono candidati alla dismissione dopo il controllo delle modifiche locali e delle PR collegate. Le alternative storiche che contengono commit solo locali restano conservate.
+Riordino concluso. Chiuse anche le PR 7, 16, 28, 29, 31 e 32 dopo aver verificato che tutte le punte fossero già nel ramo comune. I rami originali e i relativi materiali sono consultabili. Le 16 PR ancora aperte contengono commit fuori dalla storia del comune e conservano ricerca, prototipi, collaudi o documentazione separata. I rami storici con commit solo locali sono conservati anche nella copia Git locale verificata.
