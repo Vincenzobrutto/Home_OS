@@ -103,6 +103,7 @@
     "test:agency-document-analysis-db": "node test/offline.cjs --suite test:agency-document-analysis-db",
     "test:agency-document-browser-20261103": "node test/offline.cjs --suite test:agency-document-browser-20261103",
     "test:agency-documents-integration-db": "node test/offline.cjs --suite test:agency-documents-integration-db",
+    "test:agency-journey-browser-20261105": "node test/offline.cjs --suite test:agency-journey-browser-20261105",
     "test:agency-documents-integration-browser-20261103": "node test/offline.cjs --suite test:agency-documents-integration-browser-20261103"
   },
   "dependencies": {
