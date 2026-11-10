@@ -324,11 +324,71 @@ export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetai
  const minimumGap=span*LISTING_MIN_PARTITION_GAP/LISTING_DRAWING_PIXELS;
  const axial=suggestInternalWallThickness(squared,protectedRooms,minimumGap);
  const spaced=normalizeObliquePartitions(axial?.drawing??squared,span,protectedRooms,Math.max(minimumGap,axial?.nominal??0));
- return alignVerandaFacade(spaced,protectedRooms);
+ return alignVerandaFacade(alignTerraceFrontage(spaced,span,protectedRooms),protectedRooms);
+}
+
+const dot=([x,y]:Point,[u,v]:Point)=>x*u+y*v;
+
+function moveObliqueSide(drawing:PlanShape[],room:PlanShape,index:number,normal:Point,offset:number,limit:number){
+ const size=room.points.length,last=(index+1)%size;
+ const changes=new Map<number,Point>();
+ for(const [vertex,neighbour] of [[index,(index+size-1)%size],[last,(last+1)%size]] as const){
+  const point=room.points[vertex]!,other=room.points[neighbour]!;
+  const side:Point=[other[0]-point[0],other[1]-point[1]];
+  const projected=dot(side,normal);
+  if(Math.abs(projected)<EPSILON)return null;
+  const t=(offset-dot(point,normal))/projected;
+  const next:Point=[point[0]+side[0]*t,point[1]+side[1]*t];
+  if(t>=1||distance(point,next)>limit)return null;
+  changes.set(vertex,next);
+ }
+ return changeListingPoints(drawing,room,changes,true);
+}
+
+function alignTerraceFrontage(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>){
+ const terraces=drawing.filter(room=>room.kind!=='excluded'&&/\bterrazz/i.test(room.label));
+ const interior=drawing.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)&&!protectedRooms.has(room.id));
+ const adjusted=new Set<string>();
+ let result=drawing;
+ for(const terrace of terraces){
+  for(const [a,b] of edges(terrace.points)){
+   const length=distance(a,b);
+   if(length<span*.25)continue;
+   const tangent:Point=[(b[0]-a[0])/length,(b[1]-a[1])/length];
+   if(Math.min(Math.abs(tangent[0]),Math.abs(tangent[1]))<.045)continue;
+   const normal:Point=[-tangent[1],tangent[0]];
+   const origin=dot(a,tangent),outer=dot(a,normal);
+   const candidates=interior.flatMap(room=>edges(room.points).flatMap(([start,end],index)=>{
+    if(adjusted.has(room.id))return [];
+    const run=distance(start,end),along=dot(end,tangent)-dot(start,tangent);
+    if(run<span*.14||along*Math.sign(signedArea(room.points))*Math.sign(signedArea(terrace.points))>-.998*run)return [];
+    const offsets=[dot(start,normal),dot(end,normal)];
+    if(offsets.some(offset=>(offset-outer)*Math.sign(signedArea(terrace.points))>=0||Math.abs(offset-outer)>span*.04))return [];
+    const positions=[dot(start,tangent)-origin,dot(end,tangent)-origin];
+    if(Math.min(length,Math.max(...positions))-Math.max(0,Math.min(...positions))<run*.85)return [];
+    return [{id:room.id,index,offset:(offsets[0]!+offsets[1]!)/2}];
+   }));
+   if(new Set(candidates.map(face=>face.id)).size<2)continue;
+   const offsets=candidates.map(face=>face.offset);
+   if(Math.max(...offsets)-Math.min(...offsets)>span*.008)continue;
+   const common=offsets.reduce((sum,value)=>sum+value,0)/offsets.length;
+   let candidate=result;
+   for(const {id,index} of candidates){
+    const room=candidate.find(item=>item.id===id)!;
+    const corrected=moveObliqueSide(candidate,room,index,normal,common,span*.006);
+    if(!corrected){candidate=result;break;}
+    candidate=candidate.map(item=>item===room?corrected:item);
+   }
+   if(candidate!==result){
+    result=candidate;
+    for(const {id} of candidates)adjusted.add(id);
+   }
+  }
+ }
+ return result;
 }
 
 function normalizeObliquePartitions(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>,referenceGap:number){
- const dot=([x,y]:Point,[u,v]:Point)=>x*u+y*v;
  const faces=drawing.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>{
   const winding=Math.sign(signedArea(room.points));
   return edges(room.points).flatMap(([a,b],index)=>{
@@ -370,20 +430,8 @@ function normalizeObliquePartitions(drawing:PlanShape[],span:number,protectedRoo
   if([a,b].some(face=>protectedRooms.has(face.room.id)||pairs.filter(pair=>pair.a===face||pair.b===face).length!==1))continue;
   const move=(rooms:PlanShape[],face:typeof a,offset:number)=>{
    const room=rooms.find(item=>item.id===face.room.id)!;
-   const size=room.points.length,first=face.index,last=(first+1)%size;
-   const changes=new Map<number,Point>();
-   for(const [index,neighbour] of [[first,(first+size-1)%size],[last,(last+1)%size]] as const){
-    if(used.has(room.id+':'+index))return null;
-    const point=room.points[index]!,other=room.points[neighbour]!;
-    const side:Point=[other[0]-point[0],other[1]-point[1]];
-    const projected=dot(side,normal);
-    if(Math.abs(projected)<EPSILON)return null;
-    const t=(offset-dot(point,normal))/projected;
-    const next:Point=[point[0]+side[0]*t,point[1]+side[1]*t];
-    if(t>=1||distance(point,next)>Math.min(gap*.8,span*.01))return null;
-    changes.set(index,next);
-   }
-   return changeListingPoints(rooms,room,changes,true);
+   if([face.index,(face.index+1)%room.points.length].some(index=>used.has(room.id+':'+index)))return null;
+   return moveObliqueSide(rooms,room,face.index,normal,offset,Math.min(gap*.8,span*.01));
   };
   const first=move(result,a,middle+a.winding*gap/2);
   if(!first)continue;

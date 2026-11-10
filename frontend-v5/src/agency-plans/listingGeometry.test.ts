@@ -61,6 +61,16 @@ describe('listing illustration',()=>{
   expect(lower.points[0]).toEqual([0,47]);
  });
 
+ it('uses the oblique terrace facade for the two nearly aligned room fronts',()=>{
+  const terrace={...room('Terrazzo',[[0,0],[220,22],[220,35],[0,13]]),kind:'balcony'};
+  const living=room('Soggiorno',[[10,19],[100,29],[100,60],[10,60]]);
+  const studio=room('Studio',[[110,29],[205,39],[205,70],[110,70]]);
+  const [out,a,b]=listingIllustration([terrace,living,studio]);
+  const line=[...a!.points.slice(0,2),...b!.points.slice(0,2)].map(([x,y])=>y-x/10);
+  expect(Math.max(...line)-Math.min(...line)).toBeLessThan(1e-7);
+  expect(out!.points).toEqual(terrace.points);
+ });
+
  it('keeps meaningful diagonals and sides associated with saved openings',()=>{
   const a=room('Studio',[[0,0],[100,.5],[100,75],[75,100],[0,100]]);
   const result=listingIllustration([a])[0]!;

@@ -8,6 +8,8 @@ Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola sup
 
 Nelle verifiche collegate a un vano, **Modifica contorno** apre i vertici modificabili sulla stessa mappa.
 
+Quando due vani affacciano sullo stesso lungo lato obliquo del terrazzo, la pianta illustrativa può allineare i fronti alla sua inclinazione. Nella prova Roma, soggiorno, studio e terrazzo condividono un angolo di 6,573 gradi.
+
 Il distacco illustrativo può regolarizzare anche il perimetro esterno dei vani con vuoti interni, che restano protetti dai controlli geometrici. Su Roma, soggiorno–studio misura 6 pixel nei quattro punti controllati; i corridoi restano a 5–6 pixel.
 
 La resa per annuncio usa bordi più sottili e un distacco minimo di riferimento per tramezzi compatibili. Nella prova di Roma, il bianco tra studio e corridoio cucina passa da 1 a 6 pixel nei quattro punti misurati. Il PNG scaricato coincide con l’anteprima.
