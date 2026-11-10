@@ -43,7 +43,7 @@ Il lavoro residuo è ordinato nei [prossimi passi](prossimi-passi.md).
 
 - Base del ramo comune a inizio inventario `cfff252`. I sei commit della PR 83, da `64ee004` a `9edb30d`, sono antenati della PR 84.
 
-- Candidato Agenzie `58ea680`. Backend 954/955. Manca il comando npm del profilo di collaudo Agenzie registrato dal runner. Tipi backend e frontend, build backend e 54 prove HTTP su database temporaneo superati.
+- Candidato Agenzie `58ea680`. Backend 954/955. Manca il comando npm del profilo di collaudo Agenzie registrato dal runner. Tipi, lint e build di backend e frontend superati, con avvisi frontend. Passate anche 54 prove HTTP su database temporaneo. Dopo il blocco sono state interrotte le suite complete DB e frontend mock. Il database temporaneo è stato arrestato.
 
 ### Pull request precedenti
 
