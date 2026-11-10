@@ -662,7 +662,7 @@ export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?
  const points=drawing.flatMap(room=>room.points);
  if(!points.length||points.length>4096)return null;
  const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
- const faces=drawing.filter(room=>!room.holes.length&&(protectedRooms||!room.symbols?.length)&&room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>{
+ const faces=drawing.filter(room=>(protectedRooms||!room.holes.length&&!room.symbols?.length)&&room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>{
   const winding=Math.sign(signedArea(room.points));
   return edges(room.points).flatMap<WallFace & {spread:number;from:number;to:number}>(([a,b],index)=>{
    const axis=Math.abs(a[0]-b[0])<Math.abs(a[1]-b[1])?0:1;

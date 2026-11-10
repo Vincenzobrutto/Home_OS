@@ -21,7 +21,7 @@ describe('listing illustration',()=>{
  });
  it.each([false,true])('evens horizontal and vertical gaps around an L-shaped living room (saved contours: %s)',saved=>{
   const outlines=[
-   room('Soggiorno',[[164,48],[659,48],[659,278],[595,278],[595,448],[446,448],[446,295],[164,295]]),
+   room('Soggiorno',[[164,48],[659,48],[659,278],[595,278],[595,448],[446,448],[446,295],[164,295]],[[[300,90],[320,90],[320,110],[300,110]]]),
    room('Bagno',[[167,307],[437,307],[437,449],[167,449]]),
    room('Cucina',[[278,461],[600,461],[600,630],[278,630]]),
    room('Stanza',[[612,289],[993,289],[993,630],[612,630]]),
@@ -46,6 +46,7 @@ describe('listing illustration',()=>{
   expect(veranda!.points[0]![0]-balcony!.points[1]![0]).toBe(20);
   expect(balcony!.points[1]![0]-balcony!.points[0]![0]).toBe(78);
   expect(cellar!.points).toEqual(outlines[5]!.points);
+  expect(living!.holes).toEqual(outlines[0]!.holes);
   expect(details).toEqual(before);
  });
 
