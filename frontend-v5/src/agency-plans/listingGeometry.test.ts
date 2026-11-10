@@ -19,7 +19,7 @@ describe('listing illustration',()=>{
   expect(terrace!.points).toEqual(balcony.points);
   expect(original).toEqual(copy);
  });
- it('evens horizontal and vertical gaps around an L-shaped living room',()=>{
+ it.each([false,true])('evens horizontal and vertical gaps around an L-shaped living room (saved contours: %s)',saved=>{
   const outlines=[
    room('Soggiorno',[[164,48],[659,48],[659,278],[595,278],[595,448],[446,448],[446,295],[164,295]]),
    room('Bagno',[[167,307],[437,307],[437,449],[167,449]]),
@@ -28,11 +28,15 @@ describe('listing illustration',()=>{
    room('Veranda',[[146,462],[260,462],[260,630],[146,630]]),
    room('Cantina',[[211,1367],[430,1367],[430,1488],[211,1488]]),
   ];
-  const [living,bath,kitchen]=listingIllustration(outlines);
+  if(saved)outlines[1]!.symbols=[{id:'reviewed-symbol',reason:'Synthetic reviewed detail'}];
+  const details=saved?{alignments:[],contours:outlines.map(({id,points,holes})=>({id,geometry:{points,holes}}))}:undefined;
+  const before=structuredClone(details);
+  const [living,bath,kitchen]=listingIllustration(outlines,details);
   const vertical=living!.points[6]![0]-bath!.points[1]![0];
   const horizontal=bath!.points[1]![1]-living!.points[6]![1];
   expect(vertical).toBeCloseTo(horizontal,0);
   expect(vertical).toBeCloseTo(kitchen!.points[0]![1]-bath!.points[2]![1],0);
+  expect(details).toEqual(before);
  });
 
  it('keeps meaningful diagonals and sides associated with saved openings',()=>{

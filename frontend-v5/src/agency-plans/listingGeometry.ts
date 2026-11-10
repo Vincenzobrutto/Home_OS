@@ -306,7 +306,7 @@ export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetai
  const points=drawing.flatMap(room=>room.points);
  if(!points.length||points.length>4096)return drawing;
  const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
- const protectedRooms=new Set(overrides.keys());
+ const protectedRooms=new Set<string>();
  for(const alignment of details?.alignments??[]){
   protectedRooms.add(alignment.target.roomId);
   protectedRooms.add(alignment.reference.roomId);
@@ -317,7 +317,9 @@ export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetai
    return [start,end].every(point=>distance(point,at(edge,unit(fraction(point,edge))))<span*.015);
   })))protectedRooms.add(room.id);
  }
- const squared=orthogonalListingRooms(drawing,span,protectedRooms);
+ // Keep manually drawn angles, but allow already straight facing sides to
+ // share the same visual gap in the exported illustration.
+ const squared=orthogonalListingRooms(drawing,span,new Set([...protectedRooms,...overrides.keys()]));
  return suggestInternalWallThickness(squared,protectedRooms)?.drawing??squared;
 }
 
@@ -525,7 +527,7 @@ export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?
  const points=drawing.flatMap(room=>room.points);
  if(!points.length||points.length>4096)return null;
  const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
- const faces=drawing.filter(room=>!room.holes.length&&!room.symbols?.length&&room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>{
+ const faces=drawing.filter(room=>!room.holes.length&&(protectedRooms||!room.symbols?.length)&&room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>{
   const winding=Math.sign(signedArea(room.points));
   return edges(room.points).flatMap(([a,b],index)=>{
    const axis=Math.abs(a[0]-b[0])<Math.abs(a[1]-b[1])?0:1;

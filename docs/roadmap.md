@@ -9,6 +9,8 @@ Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTT
 
 L’editor per annuncio include Orto e trascinamento di una parete con le aperture agganciate. La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
 
+La normalizzazione dei distacchi vale anche per i contorni già salvati nell’annuncio. Si applica alla resa illustrativa e mantiene le protezioni per aperture confermate, allineamenti espliciti e vuoti.
+
 Nei tramezzi che si incontrano ad angolo, la pianta per annuncio può regolare lo stesso vertice sui due assi. Le distanze dei tratti vicini contribuiscono allo spessore di riferimento anche quando il tratto non può essere spostato in sicurezza.
 
 La pianta per annuncio raddrizza automaticamente i lati quasi orizzontali o verticali e rende uniforme il distacco tra tramezzi comparabili. Mantiene le separazioni reali, le diagonali evidenti e i dettagli già confermati. La resa si applica all’illustrazione e al PNG.
