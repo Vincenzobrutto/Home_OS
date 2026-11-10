@@ -73,6 +73,11 @@
 .primaryButton:disabled{background:#7c9fa5!important}
 .issueList{list-style:none;padding:0;margin:0;display:grid;gap:10px}
 .issueItem{border:1px solid #e0c48f;background:#fffaf0;border-radius:10px;padding:10px 12px}
+.issueItem[data-active=true]{border-color:#a34c06;box-shadow:inset 3px 0 #a34c06}
+.issueSummary,.issueMapLink{display:grid;gap:5px}
+.issueItem .issueMapLink{width:100%;padding:6px 4px;background:transparent;border:0;text-align:left;color:inherit}
+.issueItem .issueMapLink:hover:not(:disabled){background:#fff0d4}
+.issueLinkText{color:#005d73;text-decoration:underline;font-weight:600}
 .issueTitle{display:flex;justify-content:space-between;gap:8px;margin:0}
 .issueTitle span{color:#7a5a1d;font-size:13px}
 .issueActions{display:flex;flex-wrap:wrap;gap:8px;align-items:end}

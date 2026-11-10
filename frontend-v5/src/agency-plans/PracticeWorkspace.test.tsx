@@ -68,6 +68,23 @@ describe('practice plan workspace',()=>{
   await screen.findByText('Modifiche salvate nella pratica.');
   expect(api.edit.mock.calls[0]![1].command).toMatchObject({operation:'geometry',id:room.id,geometry:{points:[[20/600,0],[(20/600+10)/2,0],[10,10],[0,10]],holes:[]}});
  });
+ it('highlights the saved analysis point when the check has no room contour',async()=>{
+  const api=port(),state=plans(),plan=state.plans[0]!;
+  plan.issues=[{id:'missing-room',code:'seed_region_unresolved',number:3},{id:'legacy',code:'seed_region_unresolved',number:4}];
+  plan.reviewLocations=[{id:'missing-room',label:'Ripostiglio',point:[14,16]}];
+  api.plans.mockResolvedValue(state);
+  render(<AgencyPracticePlanWorkspace api={api} scopeKey="located-issue" embedded/>);
+  await screen.findByRole('img',{name:'Contorni dei singoli vani'});
+  fireEvent.click(screen.getByText('Ripostiglio'));
+  expect(screen.getByRole('button',{name:'Mostra sulla mappa',pressed:true})).toBeVisible();
+  expect(screen.getByTestId('focus-marker')).toHaveAttribute('cx','14');
+  expect(screen.getByTestId('focus-marker')).toHaveAttribute('cy','16');
+  expect(screen.queryByTestId('focus-outline')).not.toBeInTheDocument();
+  expect(screen.getByText(/non ha una posizione salvata/)).toBeVisible();
+  fireEvent.click(screen.getByRole('button',{name:'Apri la tavola originale'}));
+  expect(screen.queryByTestId('focus-marker')).not.toBeInTheDocument();
+  expect(api.edit).not.toHaveBeenCalled();
+ });
  it('links each open check to its room on the map and removes it once its outcome is saved',async()=>{
   const api=port(),state=plans(),plan=state.plans[0]!;
   plan.issues=[{id:'symbol',code:'symbol_unresolved',number:1},{id:'coverage',code:'coverage_search_limited',number:2}];

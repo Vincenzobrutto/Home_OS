@@ -296,3 +296,17 @@ test('graphic plan saves openings and canonical contours atomically, without ove
  assert.throws(()=>Records.editPlan(f.ctx.actor,original,overlap,f.ctx.now),e=>e.code==='region_overlap');
  assert.deepEqual(original.planAnalyses[0].measurement,{geometryRevision:1});
 });
+
+test('new unresolved room checks retain only a usable analysis point and label',async()=>{
+ const f=ports();
+ f.adapter.ai=async ({phase})=>({
+  proposal:{spaces:[...spaces(),{id:'missing',label:'Ripostiglio',kind:'room',seeds:[[-1,7],[0,0]]}],symbols:[],warnings:[]},
+  inputTokens:10,outputTokens:10,costUSD:.001,requestId:phase,
+ });
+ const analysis=await P.analyzePlan(f.adapter,f.input);
+ assert.ok(analysis.final.issues.some(issue=>issue.id==='missing'&&issue.code==='seed_region_unresolved'));
+ const saved=Records.registerPlan(f.ctx.actor,f.ctx.practice,analysis,1,f.ctx.now).practice;
+ const [view]=Records.planViews(f.ctx.actor,saved,f.ctx.now).plans;
+ assert.deepEqual(view.reviewLocations,[{id:'missing',label:'Ripostiglio',point:[0,0]}]);
+ assert.equal(view.rooms.some(room=>room.id==='missing'),false);
+});

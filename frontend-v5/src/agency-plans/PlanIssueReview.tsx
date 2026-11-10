@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useId,useState} from 'react';
 import styles from './practice-plan.module.css';
 
 export type Resolution='included_in_geometry'|'excluded_from_computation'|'not_applicable';
@@ -11,17 +11,27 @@ const outcomes:Record<Resolution,string>={
 /** One open check, linked to its room name and map point. Registering an outcome removes it from the open list server-side. */
 export function PlanIssueReview(p:{
  issue:{id:string;code:string};index:number;roomLabel?:string;description:string;symbolReason?:string;
- onShow?:()=>void;showLabel?:string;showDisabled?:boolean;disabled:boolean;geometryEdited:boolean;
+ active?:boolean;wholePage?:boolean;approximate?:boolean;onShow?:()=>void;showLabel?:string;showDisabled?:boolean;disabled:boolean;geometryEdited:boolean;
  onResolve:(issue:{id:string;code:string},resolution:Resolution,reason:string)=>void;
 }){
  const [resolution,setResolution]=useState<Resolution|''>(''),[reason,setReason]=useState('');
+ const summaryId=useId();
  const label=(p.roomLabel?p.roomLabel+' · ':'')+'verifica '+p.index;
- return <li className={styles.issueItem}>
-  <p className={styles.issueTitle}><strong>{p.roomLabel??'Zona senza vano'}</strong> <span>n. {p.index}</span></p>
-  <p>{p.description}</p>
-  {p.symbolReason&&<p className={styles.muted}>{p.symbolReason}</p>}
+ const summary=<>
+  <span className={styles.issueTitle}><strong>{p.roomLabel??'Zona senza vano'}</strong> <span>n. {p.index}</span></span>
+  <span>{p.description}</span>
+  {p.symbolReason&&<span className={styles.muted}>{p.symbolReason}</span>}
+ </>;
+ const action=p.showLabel??'Mostra sulla mappa';
+ return <li className={styles.issueItem} data-active={p.active||undefined}>
+  {p.onShow?<button className={styles.issueMapLink} type="button" disabled={p.showDisabled} onClick={p.onShow}
+   aria-label={action} aria-describedby={summaryId} aria-pressed={!!p.active}>
+   <span id={summaryId} className={styles.issueSummary}>{summary}</span>
+   <span className={styles.issueLinkText}>{action}</span>
+  </button>:<div className={styles.issueSummary}>{summary}<span className={styles.muted}>Questa verifica non ha una posizione salvata. Controlla la tavola originale.</span></div>}
+  {p.onShow&&p.wholePage&&<p className={styles.muted}>Questa verifica non ha una posizione salvata. Controlla la tavola originale.</p>}
+  {p.active&&p.approximate&&<p className={styles.muted}>Il segnaposto indica il punto da cui è partita l’analisi. Controlla l’area intorno.</p>}
   <div className={styles.issueActions}>
-   {p.onShow?<button type="button" disabled={p.showDisabled} onClick={p.onShow}>{p.showLabel??'Mostra sulla mappa'}</button>:<span className={styles.muted}>Posizione non disponibile: confronta l’originale.</span>}
    <label>Esito {label}<select value={resolution} disabled={p.disabled} onChange={e=>setResolution(e.target.value as Resolution|'')}>
     <option value="">Scegli esito</option>
     {(Object.keys(outcomes) as Resolution[]).map(id=><option key={id} value={id} disabled={id==='included_in_geometry'&&!p.geometryEdited}>{outcomes[id]}</option>)}

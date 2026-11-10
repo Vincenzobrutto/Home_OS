@@ -11,7 +11,7 @@ export type PlanMeasurementProps={scopeKey:string;sourceUrl:string;width:number;
  /** Simple map only: faint, non-interactive outlines shown for context (e.g. rooms under the gross perimeter). */
  contextShapes?:PlanShape[];warnIds?:string[];mapLabel?:string;toolbarActions?:ReactNode;onDiscard?:()=>void;
  /** Changing `key` selects the shape, brings it into view and marks `point` when known. */
- focus?:{id:string;point?:Point;preferSingleHole?:boolean;key:number}|null};
+ focus?:{id:string;point?:Point;preferSingleHole?:boolean;key:number;number?:number;wholePage?:boolean}|null};
 const path=(s:PlanShape)=>[s.points,...s.holes].map(p=>'M'+p.map(v=>v.join(',')).join('L')+'Z').join('');
 /** Controlled editor: source URL is supplied only after source authorization; no localStorage or live API side effects. */
 export function PlanMeasurementView(props:PlanMeasurementProps){return <PlanMeasurementEditor key={props.scopeKey} {...props}/>;}
@@ -46,6 +46,8 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
  if(focusKey!==seenFocus){
   setSeenFocus(focusKey);
   const target=props.focus;
+  if(target?.wholePage){setZoom(1);setSelection(null);setRemoveId(null);setVertex(null);setInsert(false);}
+  else if(target?.number!==undefined)setZoom(current=>Math.max(current,3));
   const targetShape=target&&shapes.find(shape=>shape.id===target.id);
   if(targetShape&&!(props.hasUnsavedChanges&&selected?.id!==targetShape.id)){
    const point=target?.point;
@@ -65,11 +67,20 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
   if(!target)return;
   const shape=shapes.find(s=>s.id===target.id)??props.contextShapes?.find(s=>s.id===target.id);
   const point=target.point??(shape?[(Math.min(...shape.points.map(p=>p[0]))+Math.max(...shape.points.map(p=>p[0])))/2,(Math.min(...shape.points.map(p=>p[1]))+Math.max(...shape.points.map(p=>p[1])))/2] as Point:null);
-  if(scroll&&map&&point){const box=map.getBoundingClientRect();if(box.width&&box.height){scroll.scrollLeft=point[0]/props.width*box.width-scroll.clientWidth/2;scroll.scrollTop=point[1]/props.height*box.height-scroll.clientHeight/2;}}
+  if(scroll&&target.wholePage){scroll.scrollLeft=0;scroll.scrollTop=0;}
+  else if(scroll&&map&&point){
+   const matrix=map.getScreenCTM?.();
+   if(matrix){
+    const viewport=scroll.getBoundingClientRect();
+    scroll.scrollLeft+=matrix.e+point[0]*matrix.a-viewport.left-scroll.clientWidth/2;
+    scroll.scrollTop+=matrix.f+point[1]*matrix.d-viewport.top-scroll.clientHeight/2;
+   }
+  }
   scroll?.scrollIntoView?.({block:'nearest',behavior:'smooth'});
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[focusKey]);
  const marker=props.focus?.point??null;
+ const highlighted=props.focus?.number!==undefined&&shapes.find(shape=>shape.id===props.focus?.id);
  function nudge(index:number,dx:number,dy:number){if(!selected||props.readOnly)return;const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points,p=points[index];if(!p)return;points[index]=[Math.max(0,Math.min(props.width,p[0]+dx)),Math.max(0,Math.min(props.height,p[1]+dy))];change(next);setVertex(index);}
  function startDrag(event:PointerEvent<SVGCircleElement>,index:number){
   const matrix=mapRef.current?.getScreenCTM();
@@ -187,6 +198,7 @@ function PlanMeasurementEditor(props:PlanMeasurementProps){
     <circle role="button" aria-label={`Vertice ${i+1}`} tabIndex={0} cx={p[0]} cy={p[1]} r={hitRadius} fill="transparent" pointerEvents={insert?"none":"fill"} style={{touchAction:'none',cursor:'grab'}} onPointerDown={event=>startDrag(event,i)} onClick={event=>{if(event.detail===0)setVertex(i);}} onKeyDown={e=>{const step=Math.max(props.width,props.height)/(e.shiftKey?60:600),moves:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};if(e.key==='Enter')setVertex(i);else if(moves[e.key]){e.preventDefault();nudge(i,...moves[e.key]!);}else if((e.key==='Delete'||e.key==='Backspace')&&ring.length>3){e.preventDefault();setVertex(i);const next=structuredClone(selected),points=[next.points,...next.holes][ringIndex]||next.points;points.splice(i,1);change(next);setVertex(null);}}}/>
     <circle aria-hidden="true" cx={p[0]} cy={p[1]} r=".1" fill="none" stroke={vertex===i?'#b45b00':'#006d80'} strokeWidth="5" vectorEffect="non-scaling-stroke" pointerEvents="none"/>
    </g>)}
+   {highlighted&&<path data-testid="focus-outline" d={path(highlighted)} fill="none" stroke="#a34c06" strokeWidth="3" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
    {marker&&<circle data-testid="focus-marker" aria-hidden="true" cx={marker[0]} cy={marker[1]} r=".1" fill="none" stroke="#d14900" strokeWidth="26" strokeOpacity=".55" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
   </svg></div>
   {!props.drawingOnly&&!props.simple&&!(props.hideRoomSummary&&view==='rooms')&&<><PlanSurfaceSummary view={view} rooms={props.rooms.filter(r=>!props.excludedCandidateIds?.includes(r.id))} configuration={props.configuration} measurement={props.measurement} measurementsOutdated={props.measurementsOutdated} onSelect={id=>{if(!shapes.some(s=>s.id===id))setView('rooms');setSelection(id);setRingIndex(0);setVertex(null);setInsert(false);}}/>

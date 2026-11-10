@@ -42,7 +42,7 @@ function Workspace(p:WorkspaceProps){
  const [task,setTask]=useState<'draw'|'measure'|'listing'>(p.embedded?'draw':'measure');
  const [taskChosen,setTaskChosen]=useState(false);
  const [graphics,setGraphics]=useState(false);
- const [focus,setFocus]=useState<{id:string;point?:Point;preferSingleHole?:boolean;key:number}|null>(null);
+ const [focus,setFocus]=useState<{id:string;point?:Point;preferSingleHole?:boolean;key:number;issueKey?:string;number?:number;wholePage?:boolean}|null>(null);
  const [candidateChoices,setCandidateChoices]=useState<{key:string;excluded:string[]}>({key:'',excluded:[]});
  const [previewKey,setPreviewKey]=useState(''),[reviewedKey,setReviewedKey]=useState('');
  const [data,setData]=useState<{practice:AgencyPractice;plans:PlansResponse}|null>(null),[loading,setLoading]=useState(true),[reload,setReload]=useState(0),[selected,setSelected]=useState(''),[image,setImage]=useState<{key:string;url:string}|null>(null),[error,setError]=useState(''),[draft,setDraft]=useState<Change|null>(null),[configDirty,setConfigDirty]=useState(false),[builder,setBuilder]=useState<Builder|null>(null),[reason,setReason]=useState(''),[pending,setPending]=useState<Pending|null>(null),[busy,setBusy]=useState(false),[conflict,setConflict]=useState(false),[notice,setNotice]=useState('');
@@ -61,7 +61,7 @@ function Workspace(p:WorkspaceProps){
  const proposal=plan?.surfaceProposal,proposalKey=plan&&proposal?plan.id+':'+proposal.digest:'',proposalAvailable=proposal?.state==='pending'&&proposal.baseGeometryRevision===(plan?.geometryRevision||1),showProposal=proposalAvailable&&previewKey===proposalKey;
  const excludedIds=candidateChoices.key===proposalKey?candidateChoices.excluded:[];
  const locked=!!p.readOnly||busy||!!pending||conflict;
- function refresh(){setQuickScale(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setBuilder(null);setPending(null);setConflict(false);setError('');setNotice('');setLoading(true);setReload(v=>v+1);}
+ function refresh(){setFocus(null);setQuickScale(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setBuilder(null);setPending(null);setConflict(false);setError('');setNotice('');setLoading(true);setReload(v=>v+1);}
  async function send(request:Pending){setBusy(true);setError('');try{const r=await p.api.edit(request.id,request.body,request.key);if(!alive.current)return;setData(v=>v?{...v,plans:carryIssueNumbers(r.plans,v.plans)}:v);setPending(null);setCandidateChoices({key:'',excluded:[]});setPreviewKey('');setReviewedKey('');setDraft(null);setConfigDirty(false);setReason('');setNotice(r.replay?'Salvataggio già ricevuto dal server.':request.body.command.operation==='save_quick_estimate'?'Stima salvata nella pratica.':'Modifiche salvate nella pratica.');if(request.body.command.operation==='save_plan_graphics')setGraphics(false);p.onSaved?.();}catch(e){if(e instanceof ApiError&&e.status===422){setPending(null);setError('Controlla scala, contorni e conferme: nessuna modifica è stata salvata.');}else failure(e);}finally{if(alive.current)setBusy(false);}}
  function save(command:Record<string,unknown>,reviewReason?:string){if(!data||!plan||locked||(showProposal&&command.operation!=='apply_surface_proposal'))return;const editReason=reviewReason||reason.trim()||(command.operation==='measure'?'Calcolo della superficie commerciale':command.operation==='geometry'?'Correzione del contorno sul documento originale':command.operation==='remove_room'?'Vano rimosso durante la revisione grafica':'');if(!editReason){setError('Indica il motivo della modifica.');return;}const request={key:crypto.randomUUID(),id:plan.id,body:{expectedRevision:data.plans.revision,expectedPlanVersion:plan.version,reason:editReason,command}};setPending(request);void send(request);}
  function change(view:Change['view'],shape:PlanShape){if(locked||showProposal)return;if(draft&&(draft.view!==view||draft.shape.id!==shape.id)){setError('Salva il contorno corrente prima di modificare un altro vano.');return;}setDraft({view,shape});setNotice('');}
@@ -94,9 +94,11 @@ function Workspace(p:WorkspaceProps){
   const outline=editedOutline?{view:editedOutline.view,id:editedOutline.shape.id,geometry:{points:editedOutline.shape.points,holes:editedOutline.shape.holes}}:undefined;
   save({operation:'save_quick_estimate',...payload,...(outline?{outline}:{})},'Stima rapida delle superfici');
  }
- function resolveIssue(issue:{id:string;code:string},resolution:Resolution,reviewReason:string){save({operation:'resolve_issue',issueId:issue.id,code:issue.code,resolution},reviewReason);}
+ function resolveIssue(issue:{id:string;code:string},resolution:Resolution,reviewReason:string){setFocus(null);save({operation:'resolve_issue',issueId:issue.id,code:issue.code,resolution},reviewReason);}
  function adoptProposal(){if(proposal)save({operation:'apply_surface_proposal',proposalDigest:proposal.digest,...(excludedIds.length?{excludedCandidateIds:excludedIds}:{})});}
- function show(id:string,point?:Point,preferSingleHole=false){setFocus(current=>({id,point,preferSingleHole,key:(current?.key??0)+1}));}
+ function show(id:string,point?:Point,preferSingleHole=false,review?:{issueKey:string;number:number;wholePage?:boolean}){
+  setFocus(current=>({id,point,preferSingleHole,key:(current?.key??0)+1,...review}));
+ }
  function saveListing(details:ListingPlanDraft){
   save({operation:'save_listing_details',...details},'Revisione dettagli della planimetria per annuncio');
  }
@@ -107,13 +109,26 @@ function Workspace(p:WorkspaceProps){
   if(!data||!plan||!rasterSize||!plan.rooms)return null;
   const issues=plan.issues??[];
   const entries=[...new Map(issues.map(issue=>[JSON.stringify([issue.id,issue.code]),issue])).values()].map((issue,index)=>{
-   const room=rooms.find(item=>item.id===issue.id||item.symbols?.some(symbol=>symbol.id===issue.id))??proposal?.rooms.find(item=>item.id===issue.id);
+   const opening=plan.openingReviews?.find(item=>item.id===issue.id);
+   const matches=(item:PlanShape)=>item.id===issue.id||item.id===opening?.spaceId||item.symbols?.some(symbol=>symbol.id===issue.id);
+   const savedRoom=rooms.find(matches);
+   const proposedRoom=proposal?.rooms.find(matches);
+   const room=savedRoom??proposedRoom;
    const symbol=room?.symbols?.find(item=>item.id===issue.id);
-   return {issue,room,symbol,canEdit:!!room&&rooms.some(item=>item.id===room.id)&&!p.readOnly,number:issue.number??index+1};
+   const location=plan.reviewLocations?.find(item=>item.id===issue.id);
+   const candidate=plan.coverage?.candidates.find(item=>item.region.id===issue.id);
+   const threshold=opening?.threshold;
+   const precisePoint=symbol?.point??(threshold?[(threshold.start[0]+threshold.end[0])/2,(threshold.start[1]+threshold.end[1])/2] as Point:undefined);
+   const candidatePoint=candidate?.region.seed??undefined;
+   const point=precisePoint??candidatePoint??location?.point;
+   const canEdit=!!savedRoom&&!p.readOnly;
+   const visibleRoom=showProposal&&!canEdit?proposedRoom:savedRoom;
+   const issueKey=JSON.stringify([plan.id,issue.id,issue.code]);
+   return {issue,issueKey,roomLabel:room?.label??location?.label,symbol,visibleRoom,point,approximate:!precisePoint&&!candidatePoint&&!!location,canEdit,number:issue.number??index+1};
   });
   const switchBlocked=manualOpen||!!builder||!!draft||configDirty||!!pending||busy;
   const accessories=rooms.filter(isAppurtenance),principals=rooms.filter(room=>!isAppurtenance(room));
-  const drawStep=!rooms.length?'Aggiungi il primo vano sulla mappa.':entries.length?`Controlla ${entries.length===1?'la verifica aperta':`le ${entries.length} verifiche aperte`}: «Modifica contorno» apre i punti del vano sulla mappa.`:'Nessuna verifica aperta: passa a Calcola superfici.';
+  const drawStep=!rooms.length?'Aggiungi il primo vano sulla mappa.':entries.length?`Controlla ${entries.length===1?'la verifica aperta':`le ${entries.length} verifiche aperte`}: seleziona una scheda per vedere il punto o il contorno sulla mappa.`:'Nessuna verifica aperta: passa a Calcola superfici.';
   const measureStep=!gross?'Nessun perimetro proposto: disegnalo sulla mappa, oppure usa la stima dai vani.':gross.status==='proposed'?'Controlla il perimetro proposto sulla mappa, scegli la copertura dei balconi e premi Salva stima.':gross.status==='draft'?'Perimetro modificato: premi Salva stima per confermarlo.':plan.quickEstimate?'Stima salvata. Selezionando un contorno puoi correggerlo: la stima si aggiorna da sola.':'Scegli la copertura dei balconi e premi Salva stima.';
   const nextStep=task==='draw'?drawStep:task==='measure'?measureStep:'Controlla l’anteprima, conferma che la pianta è completa e scarica l’immagine.';
   const tasks=[['draw','Modifica pianta'],['measure','Calcola superfici'],['listing','Pianta per annuncio']] as const;
@@ -150,7 +165,7 @@ function Workspace(p:WorkspaceProps){
   />:<p>Anteprima allineata non disponibile. Nessun contorno viene sovrapposto a un’immagine non verificata.</p>;
   return <>
    <p className={styles.planStatus}>{rooms.length} {rooms.length===1?'vano':'vani'} · {entries.length} {entries.length===1?'verifica aperta':'verifiche aperte'}{plan.quickEstimate?' · stima salvata':''}{data.plans.plans.length>1?` · pagina ${plan.proof.page}`:''}</p>
-   {data.plans.plans.length>1&&<label>Planimetria<select value={plan.id} disabled={switchBlocked||showProposal} onChange={e=>{setSelected(e.target.value);setError('');}}>{data.plans.plans.map((s,i)=><option key={s.id} value={s.id}>Planimetria {i+1} · pagina {s.proof.page}</option>)}</select></label>}
+   {data.plans.plans.length>1&&<label>Planimetria<select value={plan.id} disabled={switchBlocked||showProposal} onChange={e=>{setSelected(e.target.value);setFocus(null);setError('');}}>{data.plans.plans.map((s,i)=><option key={s.id} value={s.id}>Planimetria {i+1} · pagina {s.proof.page}</option>)}</select></label>}
    <div className={styles.planModes} role="group" aria-label="Attività sulla planimetria">
     {tasks.map(([id,label])=><button key={id} type="button" aria-pressed={task===id} disabled={task!==id&&(switchBlocked||showProposal&&id!=='draw')} onClick={()=>{setTask(id);setFocus(null);}}>{label}</button>)}
    </div>
@@ -177,11 +192,15 @@ function Workspace(p:WorkspaceProps){
       <section className={styles.panelSection} aria-labelledby="issues-heading"><h4 id="issues-heading">Verifiche aperte · {entries.length}</h4>
        {!entries.length?<p>Nessuna verifica aperta.</p>:<>
         {draft&&<p className={styles.muted}>Salva il contorno in modifica per chiudere le verifiche.</p>}
-        <ul className={styles.issueList}>{entries.map(({issue,room,symbol,canEdit,number})=><PlanIssueReview key={JSON.stringify([plan.id,issue.id,issue.code])} index={number}
-         roomLabel={room?.label} symbolReason={symbol?.reason}
+        <ul className={styles.issueList}>{entries.map(({issue,issueKey,roomLabel,symbol,visibleRoom,point,approximate,canEdit,number})=><PlanIssueReview key={issueKey} index={number}
+         roomLabel={roomLabel} symbolReason={symbol?.reason} approximate={approximate} active={focus?.issueKey===issueKey}
          description={issueLabels[issue.code]||'Una zona richiede controllo manuale.'}
-         onShow={room&&sourceUrl&&(canEdit||!showProposal||proposal?.rooms.some(item=>item.id===room.id))?()=>{if(canEdit&&showProposal){setPreviewKey('');setReviewedKey('');}show(room.id,symbol?.point,!!symbol);}:undefined}
-         showLabel={canEdit?'Modifica contorno':undefined} showDisabled={canEdit&&(locked||switchBlocked)}
+         wholePage={!visibleRoom&&!point}
+         onShow={sourceUrl?()=>{
+          if(canEdit&&showProposal){setPreviewKey('');setReviewedKey('');}
+          show(visibleRoom?.id??issue.id,point,!!symbol,{issueKey,number,wholePage:!visibleRoom&&!point});
+         }:undefined}
+         showLabel={canEdit?'Modifica contorno':visibleRoom||point?undefined:'Apri la tavola originale'} showDisabled={switchBlocked||conflict}
          disabled={locked||!!draft||configDirty||showProposal||!!builder||manualOpen}
          geometryEdited={(plan.geometryRevision||1)>1}
          issue={issue} onResolve={resolveIssue}/>)}</ul>
@@ -218,7 +237,7 @@ function Workspace(p:WorkspaceProps){
   {loading&&<p role="status">Caricamento pratica…</p>}
   {data&&!loading&&(!data.plans.plans.length?<p>Apri l’analisi del documento per iniziare la planimetria.</p>:plan?.rooms===null?<p role="status">Il documento è cambiato: l’analisi precedente non è più utilizzabile.</p>:embeddedPage())}
  </section>;
- return <section aria-label="Planimetrie e computo" className={p.embedded?styles.planEditor:styles.workspace}><header><h2>{p.embedded?'Planimetria':data?.practice.label||'Fascicolo immobile'}</h2></header><div hidden={!!p.embedded&&!conflict&&!pending} className={styles.row}><button type="button" onClick={refresh} disabled={busy}>{draft||configDirty||pending||excludedIds.length?'Ricarica e scarta le modifiche locali':'Ricarica pratica'}</button>{pending&&!busy&&!conflict&&<button type="button" onClick={()=>void send(pending)}>Riprova lo stesso salvataggio</button>}</div>{error&&<p role="alert" className={styles.warning}>{error}</p>}{notice&&<p role="status" className={styles.toast}>{notice}</p>}{loading&&<p role="status">Caricamento pratica…</p>}{data&&!loading&&<>{!p.embedded&&<section className={styles.panel}><h2>Documenti ricevuti</h2>{data.practice.documents.length?<ul>{data.practice.documents.map(d=><li key={d.id}>{d.filename} · versione {d.version} · {kinds[d.kind]||'Documento'}</li>)}</ul>:<p>Nessun documento visibile nella pratica.</p>}</section>}{!data.plans.plans.length?<p>Apri l’analisi del documento per iniziare la planimetria.</p>:<><details className={styles.documentTools} open={!p.embedded||undefined}><summary>Documento originale · pagina {plan?.proof.page}</summary><label>Planimetria da verificare<select value={plan?.id||''} disabled={locked||showProposal||!!draft||configDirty||!!builder} onChange={e=>{setSelected(e.target.value);setError('');}}>{data.plans.plans.map((s,i)=><option key={s.id} value={s.id}>Planimetria {i+1} · pagina {s.proof.page} · versione documento {s.proof.version}</option>)}</select></label></details>{plan?.rooms===null?<p role="status">Il documento è cambiato: l’analisi precedente non è più utilizzabile.</p>:plan&&rasterSize&&<>
+ return <section aria-label="Planimetrie e computo" className={p.embedded?styles.planEditor:styles.workspace}><header><h2>{p.embedded?'Planimetria':data?.practice.label||'Fascicolo immobile'}</h2></header><div hidden={!!p.embedded&&!conflict&&!pending} className={styles.row}><button type="button" onClick={refresh} disabled={busy}>{draft||configDirty||pending||excludedIds.length?'Ricarica e scarta le modifiche locali':'Ricarica pratica'}</button>{pending&&!busy&&!conflict&&<button type="button" onClick={()=>void send(pending)}>Riprova lo stesso salvataggio</button>}</div>{error&&<p role="alert" className={styles.warning}>{error}</p>}{notice&&<p role="status" className={styles.toast}>{notice}</p>}{loading&&<p role="status">Caricamento pratica…</p>}{data&&!loading&&<>{!p.embedded&&<section className={styles.panel}><h2>Documenti ricevuti</h2>{data.practice.documents.length?<ul>{data.practice.documents.map(d=><li key={d.id}>{d.filename} · versione {d.version} · {kinds[d.kind]||'Documento'}</li>)}</ul>:<p>Nessun documento visibile nella pratica.</p>}</section>}{!data.plans.plans.length?<p>Apri l’analisi del documento per iniziare la planimetria.</p>:<><details className={styles.documentTools} open={!p.embedded||undefined}><summary>Documento originale · pagina {plan?.proof.page}</summary><label>Planimetria da verificare<select value={plan?.id||''} disabled={locked||showProposal||!!draft||configDirty||!!builder} onChange={e=>{setSelected(e.target.value);setFocus(null);setError('');}}>{data.plans.plans.map((s,i)=><option key={s.id} value={s.id}>Planimetria {i+1} · pagina {s.proof.page} · versione documento {s.proof.version}</option>)}</select></label></details>{plan?.rooms===null?<p role="status">Il documento è cambiato: l’analisi precedente non è più utilizzabile.</p>:plan&&rasterSize&&<>
 
 
  {plan.issues?.length&&task!=='listing'?<details className={styles.documentTools}>
