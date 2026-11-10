@@ -320,8 +320,81 @@ export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetai
  // Keep manually drawn angles, but allow already straight facing sides to
  // share the same visual gap in the exported illustration.
  const squared=orthogonalListingRooms(drawing,span,new Set([...protectedRooms,...overrides.keys()]));
- const spaced=suggestInternalWallThickness(squared,protectedRooms)?.drawing??squared;
+ const axial=suggestInternalWallThickness(squared,protectedRooms);
+ const spaced=normalizeObliquePartitions(axial?.drawing??squared,span,protectedRooms,axial?.nominal);
  return alignVerandaFacade(spaced,protectedRooms);
+}
+
+function normalizeObliquePartitions(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>,referenceGap?:number){
+ const dot=([x,y]:Point,[u,v]:Point)=>x*u+y*v;
+ const faces=drawing.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>{
+  const winding=Math.sign(signedArea(room.points));
+  return edges(room.points).flatMap(([a,b],index)=>{
+   const length=distance(a,b);
+   if(length<span*.045)return [];
+   const direction:Point=[(b[0]-a[0])/length,(b[1]-a[1])/length];
+   // The horizontal and vertical families are handled by the axial pass.
+   if(Math.min(Math.abs(direction[0]),Math.abs(direction[1]))<.045)return [];
+   return [{room,index,a,b,length,direction,winding}];
+  });
+ });
+ if(faces.length>300)return drawing;
+ const pairs=faces.flatMap((a,i)=>faces.slice(i+1).flatMap(b=>{
+  if(a.room===b.room||dot(a.direction,b.direction)*a.winding*b.winding>-.998)return [];
+  const normal:Point=[-a.direction[1],a.direction[0]];
+  const origin=dot(a.a,a.direction);
+  const [start,end]=[b.a,b.b].map(point=>dot(point,a.direction)-origin).sort((x,y)=>x-y);
+  const from=Math.max(0,start!),to=Math.min(a.length,end!);
+  if(to-from<Math.max(span*.025,.55*Math.min(a.length,b.length)))return [];
+  const offset=dot(a.a,normal);
+  const distances=[b.a,b.b].map(point=>dot(point,normal)-offset);
+  if(distances.some(value=>value*a.winding>=-EPSILON))return [];
+  const gap=Math.abs((distances[0]!+distances[1]!)/2);
+  if(gap>span*.0275||Math.max(...distances.map(Math.abs))>span*.035)return [];
+  const middle=offset+(distances[0]!+distances[1]!)/4;
+  if([.2,.5,.8].some(t=>{
+   const along=origin+from+(to-from)*t;
+   const point:Point=[a.direction[0]*along+normal[0]*middle,a.direction[1]*along+normal[1]*middle];
+   return drawing.some(room=>room!==a.room&&room!==b.room&&insideShape(point,room));
+  }))return [];
+  return [{a,b,normal,middle,gap}];
+ }));
+ if(!pairs.length)return drawing;
+ const ordered=pairs.map(pair=>pair.gap).sort((a,b)=>a-b);
+ const gap=referenceGap??ordered[Math.floor((ordered.length-1)/2)]!;
+ const used=new Set<string>();
+ let result=drawing;
+ for(const {a,b,normal,middle} of pairs){
+  if([a,b].some(face=>protectedRooms.has(face.room.id)||pairs.filter(pair=>pair.a===face||pair.b===face).length!==1))continue;
+  const move=(rooms:PlanShape[],face:typeof a,offset:number)=>{
+   const room=rooms.find(item=>item.id===face.room.id)!;
+   const size=room.points.length,first=face.index,last=(first+1)%size;
+   const changes=new Map<number,Point>();
+   for(const [index,neighbour] of [[first,(first+size-1)%size],[last,(last+1)%size]] as const){
+    if(used.has(room.id+':'+index))return null;
+    const point=room.points[index]!,other=room.points[neighbour]!;
+    const side:Point=[other[0]-point[0],other[1]-point[1]];
+    const projected=dot(side,normal);
+    if(Math.abs(projected)<EPSILON)return null;
+    const t=(offset-dot(point,normal))/projected;
+    const next:Point=[point[0]+side[0]*t,point[1]+side[1]*t];
+    if(t>=1||distance(point,next)>Math.min(gap*.8,span*.01))return null;
+    changes.set(index,next);
+   }
+   return changeListingPoints(rooms,room,changes,true);
+  };
+  const first=move(result,a,middle+a.winding*gap/2);
+  if(!first)continue;
+  const step=result.map(room=>room.id===first.id?first:room);
+  const second=move(step,b,middle-a.winding*gap/2);
+  if(!second)continue;
+  result=step.map(room=>room.id===second.id?second:room);
+  for(const face of [a,b]){
+   used.add(face.room.id+':'+face.index);
+   used.add(face.room.id+':'+(face.index+1)%face.room.points.length);
+  }
+ }
+ return result;
 }
 
 function alignVerandaFacade(drawing:PlanShape[],protectedRooms:ReadonlySet<string>){

@@ -49,6 +49,17 @@ describe('listing illustration',()=>{
   expect(details).toEqual(before);
  });
 
+ it('makes opposing oblique edges parallel while keeping the adjacent sides vertical',()=>{
+  const upper=room('Studio',[[0,0],[100,0],[100,55],[0,45]]);
+  const lower=room('Corridoio',[[0,47],[100,58],[100,110],[0,110]]);
+  const [a,b]=listingIllustration([upper,lower]);
+  const leftGap=b!.points[0]![1]-a!.points[3]![1],rightGap=b!.points[1]![1]-a!.points[2]![1];
+  expect(leftGap).toBeCloseTo(rightGap,7);
+  expect(a!.points[2]![1]-a!.points[3]![1]).toBeCloseTo(10);
+  expect([a!.points[3]![0],a!.points[2]![0],b!.points[0]![0],b!.points[1]![0]]).toEqual([0,100,0,100]);
+  expect(lower.points[0]).toEqual([0,47]);
+ });
+
  it('keeps meaningful diagonals and sides associated with saved openings',()=>{
   const a=room('Studio',[[0,0],[100,.5],[100,75],[75,100],[0,100]]);
   const result=listingIllustration([a])[0]!;
