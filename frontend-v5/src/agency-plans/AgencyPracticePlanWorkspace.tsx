@@ -99,6 +99,16 @@ function Workspace(p:WorkspaceProps){
  function show(id:string,point?:Point,preferSingleHole=false,review?:{issueKey:string;number:number;wholePage?:boolean}){
   setFocus(current=>({id,point,preferSingleHole,key:(current?.key??0)+1,...review}));
  }
+ function locateIssue(issue:{id:string;code:string},issueKey:string,number:number){
+  setBuilder({
+   initial:null,mode:'point',pointLabel:'Posiziona verifica '+number,
+   done:shape=>{
+    const picked=shape.points[0];
+    if(picked)save({operation:'locate_issue',issueId:issue.id,code:issue.code,point:picked},'Posizione della verifica sulla tavola',
+     ()=>show(issue.id,picked,false,{issueKey,number}));
+   },
+  });
+ }
  function saveListing(details:ListingPlanDraft){
   save({operation:'save_listing_details',...details},'Revisione dettagli della planimetria per annuncio');
  }
@@ -196,14 +206,7 @@ function Workspace(p:WorkspaceProps){
          const lacksLocation=!visibleRoom&&!point;
          const canLocate=lacksLocation&&!locked&&!showProposal;
          function openCheck(){
-          if(canLocate){
-           setBuilder({initial:null,mode:'point',pointLabel:'Posiziona verifica '+number,done:shape=>{
-            const picked=shape.points[0];
-            if(picked)save({operation:'locate_issue',issueId:issue.id,code:issue.code,point:picked},'Posizione della verifica sulla tavola',
-             ()=>show(issue.id,picked,false,{issueKey,number}));
-           }});
-           return;
-          }
+          if(canLocate){locateIssue(issue,issueKey,number);return;}
           if(canEdit&&showProposal){setPreviewKey('');setReviewedKey('');}
           show(visibleRoom?.id??issue.id,point,!!symbol,{issueKey,number,wholePage:lacksLocation});
          }
