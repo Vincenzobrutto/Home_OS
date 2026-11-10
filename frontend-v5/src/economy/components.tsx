@@ -155,6 +155,7 @@ export function slicesOf(summary: EconomySummary, mode: 'family' | 'category', c
  */
 export function Distribution(props: {
   summary: EconomySummary;
+  compactLegend?: boolean;
   caps: EconomyCapabilities;
   mode: 'family' | 'category';
   family: Family | null;
@@ -163,12 +164,55 @@ export function Distribution(props: {
   onPick: (slice: Slice) => void;
 }) {
   const { summary, caps, mode } = props;
+  const hasCosts=summary.totalCents!=='0';
+  const legendRef=useRef<HTMLDetailsElement>(null);
+  useEffect(()=>{
+    if(!props.compactLegend)return;
+    const media=window.matchMedia?.('(min-width: 1101px)');
+    const update=()=>{if(legendRef.current)legendRef.current.open=media?.matches??window.innerWidth>=1101;};
+    update();media?.addEventListener('change',update);
+    return()=>media?.removeEventListener('change',update);
+  },[props.compactLegend,hasCosts]);
   const total = parseCentsString(summary.totalCents) ?? 0n;
   const all = slicesOf(summary, mode, caps);
   const positive = all.filter((s) => s.cents > 0n).sort((a, b) => (b.cents > a.cents ? 1 : b.cents < a.cents ? -1 : 0));
   const emptyFamilies = mode === 'family' ? all.filter((s) => s.cents === 0n) : [];
   const shares = positive.map((s) => shareTenths(s.cents, total));
   const sum = shares.reduce((a, b) => a + b, 0);
+
+  const legend=(
+        <ul className={styles.legend} aria-label={mode === 'family' ? 'Gruppi di spesa con costi registrati' : 'Categorie con costi registrati'}>
+          {positive.map((s, i) => (
+            <li key={s.key}>
+              <button
+                type="button"
+                className={styles.legendItem}
+                aria-label={`${s.label}: ${formatBigCents(s.cents)}, ${formatTenths(shares[i]!)}, ${s.count} ${s.count === 1 ? 'registrazione' : 'registrazioni'}. Apri l’elenco`}
+                onClick={() => props.onPick(s)}
+              >
+                <span className={styles.swatch} style={{ background: s.color }} aria-hidden="true" />
+                <span className={styles.legendLabel}>{s.label}</span>
+                <span className={styles.legendAmount}>{formatBigCents(s.cents)}</span>
+                <span className={styles.legendShare}>{formatTenths(shares[i]!)}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+  );
+  const notes=(<>
+      {emptyFamilies.length > 0 && (
+        <p className={styles.note}>Senza costi registrati nel periodo: {emptyFamilies.map((s) => s.label).join(', ')}.</p>
+      )}
+      {sum !== 1000 && <p className={styles.note}>Percentuali arrotondate a un decimale: la loro somma è {formatTenths(sum)}. Gli importi sono esatti.</p>}
+      <p className={styles.note}>
+        {mode === 'family'
+          ? 'I gruppi di spesa riuniscono le categorie e sono calcolati dal servizio. '
+          : props.family === 'unclassified' || positive.some((s) => s.key === 'other' || s.key === 'unclassified')
+            ? '«Altro» e «Non classificata» sono categorie diverse dello stesso gruppo di spesa. '
+            : 'Le categorie mostrano come si distribuiscono i costi registrati. '}
+        Tocca una voce per vedere le registrazioni.
+      </p>
+  </>);
 
   const head = (
     <div className={styles.cardHead}>
@@ -209,8 +253,8 @@ export function Distribution(props: {
   const offsets = lengths.map((_, i) => lengths.slice(0, i).reduce((a, b) => a + b, 0));
   return (
     <section className={ui.card} aria-labelledby="spese-distribuzione">
-      {head}
-      <div className={styles.chartGrid}>
+      {!props.compactLegend&&head}
+      <div className={styles.chartGrid} data-economy-chart-grid>
         <svg className={styles.chart} viewBox="0 0 200 200" role="img" aria-label="Grafico ad anello: gli stessi valori sono nella legenda">
           <circle cx="100" cy="100" r={r} fill="none" stroke="#edf2f5" strokeWidth="30" />
           {positive.map((s, i) => {
@@ -241,36 +285,9 @@ export function Distribution(props: {
             registrati
           </text>
         </svg>
-        <ul className={styles.legend} aria-label={mode === 'family' ? 'Gruppi di spesa con costi registrati' : 'Categorie con costi registrati'}>
-          {positive.map((s, i) => (
-            <li key={s.key}>
-              <button
-                type="button"
-                className={styles.legendItem}
-                aria-label={`${s.label}: ${formatBigCents(s.cents)}, ${formatTenths(shares[i]!)}, ${s.count} ${s.count === 1 ? 'registrazione' : 'registrazioni'}. Apri l’elenco`}
-                onClick={() => props.onPick(s)}
-              >
-                <span className={styles.swatch} style={{ background: s.color }} aria-hidden="true" />
-                <span className={styles.legendLabel}>{s.label}</span>
-                <span className={styles.legendAmount}>{formatBigCents(s.cents)}</span>
-                <span className={styles.legendShare}>{formatTenths(shares[i]!)}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        {props.compactLegend?<details ref={legendRef} className={styles.compactLegend}><summary>Importi e dettagli della distribuzione</summary>{head}{legend}{notes}</details>:legend}
       </div>
-      {emptyFamilies.length > 0 && (
-        <p className={styles.note}>Senza costi registrati nel periodo: {emptyFamilies.map((s) => s.label).join(', ')}.</p>
-      )}
-      {sum !== 1000 && <p className={styles.note}>Percentuali arrotondate a un decimale: la loro somma è {formatTenths(sum)}. Gli importi sono esatti.</p>}
-      <p className={styles.note}>
-        {mode === 'family'
-          ? 'I gruppi di spesa riuniscono le categorie e sono calcolati dal servizio. '
-          : props.family === 'unclassified' || positive.some((s) => s.key === 'other' || s.key === 'unclassified')
-            ? '«Altro» e «Non classificata» sono categorie diverse dello stesso gruppo di spesa. '
-            : 'Le categorie mostrano come si distribuiscono i costi registrati. '}
-        Tocca una voce per vedere le registrazioni.
-      </p>
+      {!props.compactLegend && notes}
     </section>
   );
 }

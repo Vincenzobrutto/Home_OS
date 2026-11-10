@@ -4,6 +4,7 @@ import { FakeBackend } from '../test/fakeBackend';
 import { renderApp } from '../test/harness';
 
 async function fixture() {
+  await Promise.all([import('../routes/SpesePage'), import('../routes/EconomyExpensePage')]);
   const backend = new FakeBackend(); backend.economy.enabled = true;
   const password = 'password-owner-001';
   const owner = backend.seedAccount('Proprietario Demo', 'readability@example.test', password);

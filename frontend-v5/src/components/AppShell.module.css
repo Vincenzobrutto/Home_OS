@@ -337,3 +337,10 @@
  .top:has(.mobileMenuButton) .logout{padding:8px 10px}
  .top:has(.mobileMenuButton) .logoutLabel{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 }
+
+@media (max-width: 360px) {
+  .top:has(.mobileMenuButton) {
+    gap: 4px;
+    padding-inline: 8px;
+  }
+}
