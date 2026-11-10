@@ -297,7 +297,7 @@ export function listingWalls(rooms: PlanShape[]) {
  });
 }
 
-export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetails,'alignments'|'contours'|'openings'>){
+export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetails,'alignments'|'contours'>&Partial<Pick<ListingDetails,'openings'>>){
  const overrides=new Map(details?.contours?.map(entry=>[entry.id,entry.geometry]));
  const drawing=listingDrawing(rooms,details?.alignments).map(room=>{
   const geometry=overrides.get(room.id);
