@@ -588,24 +588,39 @@ export function joinedSharedWallBands(drawing:PlanShape[],walls:SharedPlanWall[]
  });
 }
 
-export function listingPublicationWalls(rooms:PlanShape[],reviews:WallReview[],perimeter?:PlanShape){
+export function listingPublicationWalls(rooms:PlanShape[],reviews:WallReview[],perimeter?:PlanShape,fillUnreviewed=false){
  const reviewed=reviews.flatMap(review=>{
   const wall=wallReviewReference(rooms,review);
   return wall?[{wall,axis:review.axis,status:review.status}]:[];
  });
  const confirmed=reviewed.filter(item=>item.status==='confirmed');
- const bands=joinedSharedWallBands(rooms,confirmed.map(item=>item.wall),perimeter,confirmed.map(item=>item.axis));
  const covered=new Map<string,Segment[]>();
- reviewed.forEach(({wall})=>{
+ function reserve(wall:SharedPlanWall,existing:boolean){
   const original=sharedWallBand(rooms,wall);
-  if(!original)return;
+  if(!original)return false;
   const [a,b,c,d]=original as [Point,Point,Point,Point];
-  for(const [i,side] of ([[a,b],[c,d]] as Segment[]).entries()){
+  const faces=([[a,b],[c,d]] as Segment[]).map((side,i)=>{
    const {id,edge}=wall[i]!;
-   const key=JSON.stringify([id,edge]);
-   covered.set(key,[...(covered.get(key)??[]),side]);
+   return {key:JSON.stringify([id,edge]),side};
+  });
+  if(!existing&&faces.some(({key,side})=>covered.get(key)?.some(prior=>segmentsConflict(side,prior))))return false;
+  for(const {key,side} of faces)covered.set(key,[...(covered.get(key)??[]),side]);
+  return true;
+ }
+ reviewed.forEach(({wall})=>reserve(wall,true));
+ if(fillUnreviewed){
+  const points=rooms.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)).flatMap(room=>room.points);
+  const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(point=>point[axis]))-Math.min(...points.map(point=>point[axis]))));
+  for(const room of rooms){
+   for(let index=0;index<room.points.length;index++){
+    for(const {wall,from,to,gap} of sharedWallCandidates(rooms,room,index)){
+     if(gap>Math.min(20,Math.max(5,span*.025),(to-from)*.16))continue;
+     if(reserve(wall,false))confirmed.push({wall,axis:undefined,status:'confirmed'});
+    }
+   }
   }
- });
+ }
+ const bands=joinedSharedWallBands(rooms,confirmed.map(item=>item.wall),perimeter,confirmed.map(item=>item.axis));
  return {bands:bands.filter(band=>band!==null),covered};
 }
 
@@ -628,8 +643,14 @@ export function listingPublicationSegments(room:PlanShape,original:PlanShape|und
    const limit=Math.min(36,Math.max(18,length*.28));
    const inner:Segment=[at(side,from),at(side,to)];
    const projected=inner.map(point=>at(edge,unit(fraction(point,edge)))) as Segment;
-   const crossesRoom=inner.some((point,i)=>rooms.some(other=>other.id!==room.id&&other.kind!=='excluded'&&
-    (insideShape(at([point,projected[i]!],.5),other)||edges(other.points).some(border=>segmentsConflict([point,projected[i]!],border)))));
+   // A balcony can share the outer face. A touch at the end of the strip
+   // does not block the facade; an overlap inside it still does.
+   const crossesRoom=inner.some((point,i)=>{
+    const path:Segment=[point,projected[i]!];
+    const inside:Segment=[at(path,.001),at(path,.999)];
+    return rooms.some(other=>other.id!==room.id&&other.kind!=='excluded'&&
+     (insideShape(at(path,.5),other)||edges(other.points).some(border=>segmentsConflict(inside,border))));
+   });
    return !crossesRoom&&inner.every(point=>Math.abs(cross(...edge,point))/run<=limit)?[{edge,from,to,limit,inner,projected}]:[];
   });
  });
@@ -707,7 +728,7 @@ export function listingFacadeFill(walls:FacadeBand[]){
   }).sort((a,b)=>a.start.position-b.start.position);
   let previous=ordered[0]!.end;
   for(const {start,end} of ordered.slice(1)){
-   if(start.position>previous.position&&distance(start.point,previous.point)<=Math.min(8,distance(start.point,start.inside),distance(previous.point,previous.inside)))
+   if(start.position>previous.position&&distance(start.point,previous.point)<=Math.min(16,distance(start.point,start.inside),distance(previous.point,previous.inside)))
     polygons.push([previous.inside,start.inside,start.point,previous.point]);
    if(end.position>previous.position)previous=end;
   }

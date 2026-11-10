@@ -115,6 +115,29 @@ it('fills the perimeter inwards to the partitions and projects an opening throug
  expect(listingFacadeOpposite({kind:'window',start:[20,80],end:[36,80]},walls)).toEqual([[20,96],[36,96]]);
 });
 
+it('fills narrow ordinary divisions, respects rejected walls and leaves wider passages open',()=>{
+ const drawing=[
+  room('a',[[10,10],[48,10],[48,80],[10,80]]),
+  room('b',[[52,10],[90,10],[90,80],[52,80]]),
+  room('c',[[94,10],[130,10],[130,80],[94,80]]),
+  room('d',[[142,10],[178,10],[178,80],[142,80]]),
+ ];
+ const rejected=recordWallReview(drawing,[{id:'b',edge:1},{id:'c',edge:3}],'discarded');
+ const {bands,covered}=listingPublicationWalls(drawing,[rejected],undefined,true);
+ expect(bands).toHaveLength(1);
+ expect(bands[0]).toContainEqual([48,10]);
+ expect(covered.has(JSON.stringify(['d',3]))).toBe(false);
+});
+
+it('fills the veranda facade up to a balcony touching the outside edge',()=>{
+ const veranda=room('veranda',[[10,10],[48,10],[48,80],[10,80]]);
+ const balcony={...room('balcone',[[0,5],[4,5],[4,85],[0,85]]),kind:'balcony' as const};
+ const outline=room('gross',[[4,4],[54,4],[54,96],[4,96]]);
+ const layout=listingPublicationSegments(veranda,veranda,new Map(),outline,[veranda,balcony]);
+ expect(layout.walls).toContainEqual({outer:[[4,96],[4,4]],inner:[[10,80],[10,10]],projected:[[4,80],[4,10]]});
+ expect(listingPublicationSegments(balcony,balcony,new Map(),outline,[veranda,balcony]).walls).toEqual([]);
+});
+
 describe('listing illustration',()=>{
  it('squares slightly tilted sides and evens comparable interior gaps without moving a balcony',()=>{
   const a=room('Soggiorno',[[0,0],[100,.7],[100.6,80],[0,80]]);

@@ -2,9 +2,9 @@ import {useState} from 'react';
 import {createPortal} from 'react-dom';
 import type {ListingDetails,ListingOpening,ListingPlanDraft,QuickEstimateScale,WallReview} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
-import {isBalcony,paperMetresPerPixel} from './scaleDetection';
+import {insideShape,isBalcony,paperMetresPerPixel} from './scaleDetection';
 import type {MeasurementConfiguration} from './measurement-types';
-import {listingDoorOpposite, listingFacadeFill, listingFacadeOpposite, listingIllustration, listingOpeningOnDrawing, listingPublicationSegments, listingPublicationWalls, listingWalls} from './listingGeometry';
+import {listingDoorOpposite, listingFacadeFill, listingFacadeOpposite, listingIllustration, listingOpeningOnDrawing, listingPublicationSegments, listingPublicationWalls, listingWalls, wallReviewReference} from './listingGeometry';
 import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
@@ -12,10 +12,13 @@ import {LISTING_DRAWING_PIXELS,LISTING_OUTER_STROKE,LISTING_PARTITION_STROKE,lis
 
 function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShape,reviews:WallReview[]=[]) {
  let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
- const {bands,covered}=listingPublicationWalls(rooms,reviews,gross);
- const useReviewedGeometry=covered.size>0;
+ const useReviewedGeometry=reviews.some(review=>wallReviewReference(rooms,review));
  const overrides=new Map(details?.contours?.map(entry=>[entry.id,entry.geometry]));
- const drawing=useReviewedGeometry?rooms.map(room=>({...room,...overrides.get(room.id)})):listingIllustration(rooms,details);
+ const enclosedVeranda=(room:PlanShape)=>!!gross&&room.kind==='balcony'&&/\bverand/i.test(room.label)&&room.points.filter(point=>insideShape(point,gross)).length>=room.points.length/2;
+ const publicationRooms=rooms.map(room=>enclosedVeranda(room)?{...room,kind:'room' as const}:room);
+ const drawing=useReviewedGeometry?publicationRooms.map(room=>({...room,...overrides.get(room.id)})):listingIllustration(publicationRooms,details);
+ const wallSource=useReviewedGeometry?publicationRooms:drawing;
+ const {bands,covered}=listingPublicationWalls(wallSource,reviews,gross,true);
  for (const [x,y] of [...drawing.flatMap(room=>room.points),...(gross?.points??[]),...bands.flat()]) {
   left = Math.min(left, x);
   top = Math.min(top, y);
@@ -69,7 +72,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShap
   outdoorWalls.lineTo(...position(b));
  }
  const interior=drawing.filter(room=>!outdoor.includes(room));
- const wallLayout=gross||useReviewedGeometry?interior.map(room=>listingPublicationSegments(room,rooms.find(source=>source.id===room.id),covered,gross,drawing)):null;
+ const wallLayout=gross||covered.size?interior.map(room=>listingPublicationSegments(room,wallSource.find(source=>source.id===room.id),covered,gross,drawing)):null;
  const remaining=wallLayout?wallLayout.flatMap(part=>part.segments):listingWalls(interior);
  const facadeWalls=wallLayout?.flatMap(part=>part.walls)??[];
  for (const [a,b] of remaining) {
