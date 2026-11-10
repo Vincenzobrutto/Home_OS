@@ -28,7 +28,7 @@ Il ramo di riferimento è **`codex/dimora-v5-consolidata-20261023`**. Il ramo co
 
 ## App sul PC
 
-Sul PC già configurato, aprire **http://127.0.0.1:5174** e accedere normalmente. L’API locale ascolta sulla porta 3011. Se la pagina non risponde, far riavviare i servizi dal responsabile del PC usando il rilascio locale già predisposto. Agenzie e Gift sono soggetti ai blocchi operativi di quel rilascio. La configurazione e i dati locali restano separati dal ramo di riferimento. [Scheda di rilascio locale](https://github.com/Vincenzobrutto/Home_OS/pull/80)
+Sul PC già configurato, aprire **http://127.0.0.1:5174** e accedere normalmente. L’API locale ascolta sulla porta 3011. Se la pagina non risponde, far riavviare i servizi dal responsabile del PC usando il rilascio locale già predisposto. La ricevuta registra l’attivazione locale di Agenzie e Gift il 4 novembre, con AI a pagamento ed email disabilitate. Il registro del 5 novembre documenta un aggiornamento locale successivo. La configurazione e i dati locali restano separati dal ramo di riferimento. [Ricevuta del rilascio locale](https://github.com/Vincenzobrutto/Home_OS/blob/codex/dimora-v5-consolidata-20261023/docs/v5/local-common-runtime-20261103.md)
 
 ## Decisioni aperte
 
@@ -53,6 +53,6 @@ Il lavoro residuo è ordinato nei [prossimi passi](prossimi-passi.md).
 | [70](https://github.com/Vincenzobrutto/Home_OS/pull/70) | Integrata | Andamento mensile verificato con 131 test mirati e browser a 1440, 873, 390 e 320 px. Typecheck, lint e build verdi. |
 | [67](https://github.com/Vincenzobrutto/Home_OS/pull/67) | Chiudere conservando il rapporto nella PR | Il codice del riepilogo è già nel comune. La PR registra la vecchia preview e confligge con i registri correnti. |
 | [63](https://github.com/Vincenzobrutto/Home_OS/pull/63) | Chiudere conservando il rapporto nella PR | Le etichette sono già nel comune. La PR conserva il rapporto operativo dell’epoca e confligge con i registri correnti. |
-| [80](https://github.com/Vincenzobrutto/Home_OS/pull/80) | Unire come ricevuta di rilascio quando la base lo consente | Documenta il rilascio locale già verificato. I conflitti con il comune riguardano solo i registri. Riportare la ricevuta in una proposta documentale aggiornata, conservando le registrazioni Agenzie. |
+| [80](https://github.com/Vincenzobrutto/Home_OS/pull/80) | Integrata | Ricevuta storica del rilascio locale del 3 novembre e dell’attivazione Agenzie e Gift del 4 novembre. |
 
 I checkout e i rami già contenuti nel comune sono candidati alla dismissione dopo il controllo delle modifiche locali e delle PR collegate. Le alternative storiche che contengono commit solo locali restano conservate.
