@@ -345,7 +345,10 @@ function moveObliqueSide(drawing:PlanShape[],room:PlanShape,index:number,normal:
  return changeListingPoints(drawing,room,changes,true);
 }
 
-export function proposeSharedPlanWall(drawing:PlanShape[],roomId:string,index:number,raster:{width:number;height:number;ink:(x:number,y:number,radius:number)=>boolean}){
+type PlanWallRaster={width:number;height:number;ink:(x:number,y:number,radius:number)=>boolean};
+type SharedPlanWall=[{id:string;edge:number},{id:string;edge:number}];
+
+function proposeSharedPlanWall(drawing:PlanShape[],roomId:string,index:number,raster:PlanWallRaster){
  const room=drawing.find(item=>item.id===roomId);
  if(!room||isAppurtenance(room)||room.kind==='excluded')return null;
  const edge=edges(room.points)[index];
@@ -419,8 +422,48 @@ export function proposeSharedPlanWall(drawing:PlanShape[],roomId:string,index:nu
  const step=drawing.map(item=>item===room?first:item);
  const second=moveObliqueSide(step,other,edgeIndex,fittedNormal,baseline+best.second/factor,range*2);
  if(!second||[first,second].some(item=>item.points.some(([x,y])=>x<0||y<0||x>raster.width||y>raster.height)))return null;
- if([first,second].every((item,i)=>item.points.every((point,j)=>samePoint(point,[room,other][i]!.points[j]!))))return null;
- return {rooms:[first,second],sides:[edges(first.points)[index]!,edges(second.points)[edgeIndex]!]};
+ const wall:SharedPlanWall=[{id:room.id,edge:index},{id:other.id,edge:edgeIndex}];
+ return {rooms:[first,second],wall};
+}
+
+export async function proposeSharedPlanWalls(drawing:PlanShape[],raster:PlanWallRaster){
+ const visited=new Set<string>();
+ const walls:SharedPlanWall[]=[];
+ let result=drawing;
+ for(const room of drawing){
+  await new Promise(resolve=>setTimeout(resolve,0));
+  for(let edge=0;edge<room.points.length;edge++){
+   if(visited.has(JSON.stringify([room.id,edge])))continue;
+   const proposal=proposeSharedPlanWall(result,room.id,edge,raster);
+   if(!proposal)continue;
+   // A long face can be reused by another room if its fitted edge stays fixed.
+   if(proposal.wall.some(({id,edge})=>{
+    if(!visited.has(JSON.stringify([id,edge])))return false;
+    const before=edges(result.find(item=>item.id===id)!.points)[edge]!;
+    const after=edges(proposal.rooms.find(item=>item.id===id)!.points)[edge]!;
+    return !samePoint(before[0],after[0])||!samePoint(before[1],after[1]);
+   }))continue;
+   result=result.map(item=>proposal.rooms.find(changed=>changed.id===item.id)??item);
+   walls.push(proposal.wall);
+   for(const side of proposal.wall)visited.add(JSON.stringify([side.id,side.edge]));
+  }
+ }
+ const rooms=result.filter((room,i)=>room.points.some((point,j)=>!samePoint(point,drawing[i]!.points[j]!)));
+ return {walls,rooms};
+}
+
+/** Fill only the overlapping run, leaving the turns at the ends visible. */
+export function sharedWallBand(drawing:PlanShape[],wall:SharedPlanWall):Point[]|null{
+ const [first,second]=wall.map(({id,edge})=>{
+  const room=drawing.find(item=>item.id===id);
+  return room&&edges(room.points)[edge];
+ });
+ if(!first||!second||distance(...first)<EPSILON||distance(...second)<EPSILON)return null;
+ const projected=second.map(point=>fraction(point,first)).sort((a,b)=>a-b);
+ const from=Math.max(0,projected[0]!),to=Math.min(1,projected[1]!);
+ if(to<=from)return null;
+ const start=at(first,from),end=at(first,to);
+ return [start,end,at(second,unit(fraction(end,second))),at(second,unit(fraction(start,second)))];
 }
 
 function alignTerraceFrontage(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>){

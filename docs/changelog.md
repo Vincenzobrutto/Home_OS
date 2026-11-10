@@ -8,7 +8,7 @@ Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola sup
 
 Nelle verifiche collegate a un vano, **Modifica contorno** apre i vertici modificabili sulla stessa mappa.
 
-In Modifica pianta, Verifica parete condivisa confronta due facce con il raster della tavola originale. Se rileva entrambi i bordi, mostra la correzione. Usa correzione la porta nella bozza e Salva modifiche alla planimetria conferma insieme i due contorni. In assenza di riscontro, resta disponibile la correzione manuale.
+In Modifica pianta, Proponi pareti comuni esegue una sola scansione della tavola e presenta una fascia per ciascun tratto verificabile. Usa correzioni aggiorna la bozza. Salva modifiche alla planimetria conferma i contorni distinti dei vani.
 
 Quando due vani affacciano sullo stesso lungo lato obliquo del terrazzo, la pianta illustrativa può allineare i fronti alla sua inclinazione. Nella prova Roma, soggiorno, studio e terrazzo condividono un angolo di 6,573 gradi.
 

@@ -57,33 +57,34 @@ it('uses the same wall controls on original geometry and keeps listing-only over
  expect(onApply).toHaveBeenCalledWith({openings:[],alignments:[],contours:[{id:'a',geometry:{points:[[10,10],[91,10],[91,90],[10,90]],holes:[]}}]});
 });
 
-it('checks both faces against source ink and requires review before saving the pair',async()=>{
+it('finds both shared walls together and shows a single band per wall before saving',async()=>{
  const rooms:PlanShape[]=[
   {id:'k',label:'Cucina',points:[[10,10],[50,10],[50,90],[10,90]],holes:[]},
-  {id:'b',label:'Bagno',points:[[55,10],[110,10],[110,90],[55,90]],holes:[]},
+  {id:'b',label:'Bagno',points:[[55,10],[92,10],[92,90],[55,90]],holes:[]},
+  {id:'c',label:'Camera',points:[[97,10],[135,10],[135,90],[97,90]],holes:[]},
  ];
- vi.mocked(readListingRaster).mockResolvedValueOnce({width:120,height:100,ink:()=>false});
- vi.mocked(readListingRaster).mockResolvedValue({width:120,height:100,ink:x=>Math.round(x)>=48&&Math.round(x)<=57});
+ vi.mocked(readListingRaster).mockResolvedValueOnce({width:140,height:100,ink:()=>false});
+ vi.mocked(readListingRaster).mockResolvedValue({width:140,height:100,ink:x=>[48,90].some(start=>Math.round(x)>=start&&Math.round(x)<=start+9)});
  const onApply=vi.fn();
- render(<ListingPlanReview editPlan sourceUrl="/plan.png" width={120} height={100} rooms={rooms}
+ render(<ListingPlanReview editPlan sourceUrl="/plan.png" width={140} height={100} rooms={rooms}
   disabled={false} onClose={()=>{}} onApply={onApply}/>);
- fireEvent.click(screen.getByRole('button',{name:'Cucina · modifica muri'}));
- fireEvent.click(screen.getByRole('button',{name:'Verifica parete condivisa'}));
- fireEvent.click(screen.getByRole('button',{name:'Parete 2 · Cucina'}));
- await screen.findByText(/non mostra una correzione affidabile/);
- expect(screen.queryByRole('button',{name:'Usa correzione'})).not.toBeInTheDocument();
- fireEvent.click(screen.getByRole('button',{name:'Parete 2 · Cucina'}));
- await screen.findByText('Proposta per Cucina e Bagno');
+ const scan=screen.getByRole('button',{name:'Proponi pareti comuni'});
+ fireEvent.click(scan);
+ await screen.findByText(/non offre riscontro sufficiente/);
+ expect(screen.queryByRole('button',{name:'Usa correzioni'})).not.toBeInTheDocument();
+ fireEvent.click(scan);
+ await screen.findByText('2 pareti comuni riconosciute');
  const save=screen.getByRole('button',{name:'Salva modifiche alla planimetria'});
  expect(save).toBeDisabled();
- expect(screen.getByLabelText('Contorni proposti sulla tavola originale').querySelectorAll('line')).toHaveLength(2);
+ expect(screen.getByLabelText('Pareti comuni sulla tavola').querySelectorAll('polygon')).toHaveLength(2);
  expect(onApply).not.toHaveBeenCalled();
- fireEvent.click(screen.getByRole('button',{name:'Usa correzione'}));
+ fireEvent.click(screen.getByRole('button',{name:'Usa correzioni'}));
  expect(onApply).not.toHaveBeenCalled();
  fireEvent.click(save);
  expect(onApply).toHaveBeenCalledWith(expect.objectContaining({contours:[
   {id:'k',geometry:{points:[[10,10],[48,10],[48,90],[10,90]],holes:[]}},
-  {id:'b',geometry:{points:[[57,10],[110,10],[110,90],[57,90]],holes:[]}},
+  {id:'b',geometry:{points:[[57,10],[90,10],[90,90],[57,90]],holes:[]}},
+  {id:'c',geometry:{points:[[99,10],[135,10],[135,90],[99,90]],holes:[]}},
  ]}));
 });
 
