@@ -459,6 +459,9 @@ profiles["test:agency-practices-db"] = { database: true, api: false, files: ["te
 profiles["test:offline-db"].files.push("test/agency-practices.integration.test.cjs");
 profiles["test:agency-review"] = { database:false, api:false, files:["test/agency-review.test.cjs"] };
 profiles.test.files.push("test/agency-review.test.cjs");
+
+profiles.test.files.push('test/agency-journey.test.cjs');
+profiles['test:agency-journey-browser-20261105']={database:true,api:false,files:['test/agency-journey-browser-20261105.integration.test.cjs'],apiFiles:[],interactiveUntil:'2026-11-05T17:30:00.000Z'};
 module.exports = profiles;
 profiles['test:agency-coherence'] = { database:false, api:false, files:['test/agency-coherence.test.cjs'] };
 profiles.test.files.push('test/agency-coherence.test.cjs');

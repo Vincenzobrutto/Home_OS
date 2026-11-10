@@ -1,5 +1,7 @@
 # App locale aggiornata al comune PR79 — 3 novembre 2026
 
+> Ricevuta storica del rilascio del 3 novembre e della configurazione del 4 novembre. Il [registro del 5 novembre](agency-journey-20261105.md) documenta un aggiornamento locale successivo. Questa ricevuta attesta le verifiche svolte nelle date indicate.
+
 ## Mandato e versione attiva
 
 Dopo il merge della PR79 il committente ha richiesto «Ed integriamo anche app». Aggiornati API e frontend locali alla fonte congelata `cfff25277039d39ee47c063b8bee1f4e2160c190`, lasciando PostgreSQL, origine, storage e autenticazione canonici. Il rilascio usa un nuovo checkout detached e asset verificati; nessuna modifica a main o alla demo pubblica Alessio.

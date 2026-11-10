@@ -1,4 +1,5 @@
 import {serviceError} from '../api/errors';
+import type {Account} from '../api/types';
 export type DigitalPlanSummary={planId:string;geometryRevision:number;page:number;roomCount:number;qualification:'estimated'|'reviewed'|'unverified';caveats:string[]};
 export type GiftSurface={kind:'net'|'cadastral'|'commercial';qualification:'estimated'|'reviewed'|'unverified';method:string;geometryRevision:number;caveats:string[]};
 export type GiftDescriptor={agencyId:string;practiceId:string;sourceId:string;sourceVersion:number;sha256:string;metadataVersion:number;origin:'received'|'agency_generated';lifecycle:'draft'|'final'|'signed';author:string;title:string;surface?:GiftSurface;digitalPlan?:DigitalPlanSummary};
@@ -12,6 +13,7 @@ export type GiftInvitations={practiceId:string;accepted:boolean;invitations:{id:
 export type GiftCapabilities={enabled:boolean;requiresVerifiedEmail:true};
 export type GiftBenefits={fullAccess:boolean;scope:'all_owner_features';validUntil:string|null};
 export type GiftLanding={id:string;version:number;requiresAccount:true};
+export type GiftRegistrationContext={recipientEmail:string};
 export type GiftAnnualBenefit={requested:false}|{requested:true;offerId:'dimora-full-access-v1';offerVersion:1;activated:false};
 export type GiftPreviewDocument={title:string;author:string;origin:'received'|'agency_generated';lifecycle:'final'|'signed';signatureVerification:'not_assessed';surface?:GiftSurface;digitalPlan?:DigitalPlanSummary};
 export type GiftPreview={id:string;version:number;state:'invited'|'claimed';agencyName:string;documents:GiftPreviewDocument[];annualBenefit:GiftAnnualBenefit};
@@ -43,6 +45,18 @@ function boolean(input:unknown):boolean{if(typeof input!=='boolean')invalid();re
 function oneOf<T extends string>(input:unknown,values:readonly T[]):T{if(typeof input!=='string'||!values.includes(input as T))invalid();return input as T;}
 function date(input:unknown){const value=text(input,27),at=new Date(value);if(!Number.isFinite(at.getTime())||at.toISOString()!==value)invalid();return value;}
 function email(input:unknown){const value=text(input,254);if(value!==value.toLowerCase()||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value))invalid();return value;}
+export function parseGiftRegistrationEmail(input:unknown):{message:string}{
+ return parse(()=>({message:text(object(input,['message']).message,500)}));
+}
+export function parseGiftRegistrationContext(input:unknown):GiftRegistrationContext{
+ return parse(()=>({recipientEmail:email(object(input,['recipientEmail']).recipientEmail)}));
+}
+export function parseGiftRegistration(input:unknown):{account:Account}{
+ return parse(()=>{
+  const account=object(object(input,['account']).account,['id','name','email','emailVerifiedAt','requiresEmailVerification']);
+  return {account:{id:uuid(account.id),name:text(account.name,160),email:email(account.email),emailVerifiedAt:date(account.emailVerifiedAt),requiresEmailVerification:boolean(account.requiresEmailVerification)}};
+ });
+}
 function array<T>(input:unknown,min:number,max:number,item:(value:unknown)=>T):T[]{
  if(!Array.isArray(input)||Object.getPrototypeOf(input)!==Array.prototype||input.length<min||input.length>max||Reflect.ownKeys(input).length!==input.length+1)invalid();
  const result:T[]=[];for(let i=0;i<input.length;i++){const d=Object.getOwnPropertyDescriptor(input,String(i));if(!d||!('value'in d)||!d.enumerable)invalid();result.push(item(d.value));}return result;

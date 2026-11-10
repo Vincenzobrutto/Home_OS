@@ -1,9 +1,10 @@
-import {ArgumentsHost,Body,Catch,Controller,DynamicModule,ExceptionFilter,Get,Header,Headers,HttpCode,HttpException,Inject,Module,Param,Post,Query,Req,UseFilters,UseGuards} from '@nestjs/common';
+import {ArgumentsHost,Body,Catch,Controller,DynamicModule,ExceptionFilter,Get,Header,Headers,HttpCode,HttpException,Inject,Module,Param,Post,Query,Req,Res,UseFilters,UseGuards} from '@nestjs/common';
 import {randomUUID} from 'node:crypto';
 import type {Request,Response} from 'express';
 import {SessionsService} from '../security';
 import {PrismaService} from '../prisma.service';
 import {DocumentsModule} from '../documents/documents.module';
+import {AuthModule} from '../auth/auth.module';
 import {LocalFileStorage} from '../documents/storage';
 import {AgencySessionGuard} from './http';
 import {AgencyPracticesStore} from './store';
@@ -16,7 +17,8 @@ import {GiftAcceptanceWorker} from './gift-acceptance-worker';
 import {GiftThrottle} from './gift-throttle';
 import {GiftBenefitsStore} from './gift-benefits-store';
 import {GiftDocumentReleaseStore} from './gift-document-release';
-import {parseGiftLandingBody,parseGiftClaimBody,parseGiftAcceptanceBody,parseGiftCreateBody,parseGiftVersionBody,parseGiftReissueBody} from './gift-http-contracts';
+import {parseGiftLandingBody,parseGiftClaimBody,parseGiftAcceptanceBody,parseGiftCreateBody,parseGiftVersionBody,parseGiftReissueBody,parseGiftRegistrationContextBody,parseGiftRegistrationBody} from './gift-http-contracts';
+import {GiftRegistrationService} from './gift-registration';
 import {GiftJobsRunner,giftDeliveryConfigured,type GiftRuntime} from './gift-runner';
 
 type AgencyRequest=Request&{agencyAccountId:string};
@@ -40,7 +42,8 @@ export class GiftErrorFilter implements ExceptionFilter{
     code=status===401?(provided==='account_context_changed'?'account_context_changed':'unauthenticated'):status===403?'csrf_invalid':status===429?'rate_limited':status===422?'invalid_input':typeof provided==='string'&&['storage_unavailable','file_check_unavailable','storage_capacity_low'].includes(provided)?provided:'service_unavailable';
    }catch{status=503;code='service_unavailable';}
   }
-  response.status(status).json({error:{code,message:status===503?'Servizio temporaneamente non disponibile.':status===404?'Gift non disponibile per questo accesso.':'Controlla accesso e dati della richiesta.',requestId:randomUUID()}});
+  const message=code==='registration_unavailable'?'Non puoi completare la registrazione. Se hai già un account, accedi per continuare.':status===503?'Servizio temporaneamente non disponibile.':status===404?'Gift non disponibile per questo accesso.':'Controlla accesso e dati della richiesta.';
+  response.status(status).json({error:{code,message,requestId:randomUUID()}});
  }
 }
 
@@ -78,9 +81,36 @@ export class AgencyGiftController{
 
 @Controller() @UseFilters(GiftErrorFilter)
 export class GiftDeliveryController{
- constructor(private readonly sessions:SessionsService,@Inject(GiftInvitationsStore)private readonly invitations:GiftInvitationsStore,@Inject(GiftAcceptanceStore)private readonly acceptances:GiftAcceptanceStore,@Inject(GiftAcceptanceWorker)private readonly worker:GiftAcceptanceWorker,@Inject(GiftJobsRunner)private readonly runner:GiftJobsRunner,@Inject(GiftThrottle)private readonly throttle:GiftThrottle){}
+ constructor(private readonly sessions:SessionsService,@Inject(GiftInvitationsStore)private readonly invitations:GiftInvitationsStore,@Inject(GiftAcceptanceStore)private readonly acceptances:GiftAcceptanceStore,@Inject(GiftAcceptanceWorker)private readonly worker:GiftAcceptanceWorker,@Inject(GiftJobsRunner)private readonly runner:GiftJobsRunner,@Inject(GiftThrottle)private readonly throttle:GiftThrottle,private readonly registration:GiftRegistrationService){}
  @Post('gift-invitations/:invitationId/landing') @HttpCode(200) @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
  async landing(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);await this.sessions.requireCsrf(r);await this.throttle.check('landing',{ip:r.ip??''});return this.invitations.landingStatus(id(invitationId),parseGiftLandingBody(input).secret);}
+ private async registrationGuest(req: Request) {
+  const guest = await this.sessions.requireCsrf(req);
+  if (guest.accountId) throw new GiftInvitationError('registration_unavailable');
+  await this.throttle.check('landing', { ip: req.ip ?? '' });
+  return guest;
+ }
+ @Post('gift-invitations/:invitationId/registration-email') @HttpCode(202)
+ @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
+ async registrationEmail(@Req() req: Request, @Param('invitationId') invitationId: string, @Body() input: unknown, @Query() query: unknown) {
+  noQuery(query);
+  await this.registrationGuest(req);
+  return this.registration.requestEmail(id(invitationId), parseGiftLandingBody(input).secret, req);
+ }
+ @Post('gift-invitations/:invitationId/registration-context') @HttpCode(200)
+ @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
+ async registrationContext(@Req() req: Request, @Param('invitationId') invitationId: string, @Body() input: unknown, @Query() query: unknown) {
+  noQuery(query);
+  await this.registrationGuest(req);
+  return this.registration.context(id(invitationId), parseGiftRegistrationContextBody(input));
+ }
+ @Post('gift-invitations/:invitationId/register')
+ @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
+ async register(@Req() req: Request, @Res({ passthrough: true }) res: Response, @Param('invitationId') invitationId: string, @Body() input: unknown, @Query() query: unknown) {
+  noQuery(query);
+  const guest = await this.registrationGuest(req);
+  return this.registration.register(id(invitationId), parseGiftRegistrationBody(input), guest, res);
+ }
  @Post('gift-invitations/:invitationId/preview') @HttpCode(200) @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
  async preview(@Req()r:Request,@Param('invitationId')invitationId:string,@Body()input:unknown,@Query()q:unknown){noQuery(q);const session=await this.sessions.require(r,true);await this.throttle.check('mutation',{ip:r.ip??'',accountId:session.accountId});return this.invitations.recipientPreview(session.accountId,id(invitationId),parseGiftLandingBody(input).secret);}
  @Post('gift-invitations/:invitationId/claim') @HttpCode(200) @Header('Cache-Control','no-store') @Header('Referrer-Policy','no-referrer') @Header('X-Content-Type-Options','nosniff')
@@ -95,7 +125,7 @@ export class GiftDeliveryController{
 export class GiftDeliveryModule{
  static register(storageRoot:string,options:Partial<GiftRuntime>={}):DynamicModule{
   const runtime:GiftRuntime={autoStart:true,pollIntervalMs:2000,concurrency:1,...options};
-  return {module:GiftDeliveryModule,imports:[GiftAccountModule,DocumentsModule],controllers:[AgencyGiftController,GiftDeliveryController],providers:[AgencySessionGuard,{provide:AgencyPracticesStore,useFactory:(db:PrismaService)=>new AgencyPracticesStore(db),inject:[PrismaService]},{provide:AgencyFileVault,useFactory:()=>AgencyFileVault.open(storageRoot)},{provide:GiftDocumentReleaseStore,useFactory:(db:PrismaService)=>new GiftDocumentReleaseStore(db),inject:[PrismaService]},{provide:GiftInvitationsStore,useFactory:(db:PrismaService)=>new GiftInvitationsStore(db),inject:[PrismaService]},{provide:GiftAcceptanceWorker,useFactory:(db:PrismaService,vault:AgencyFileVault,storage:LocalFileStorage)=>new GiftAcceptanceWorker(db,vault,storage),inject:[PrismaService,AgencyFileVault,LocalFileStorage]},{provide:GiftJobsRunner,useFactory:(db:PrismaService,worker:GiftAcceptanceWorker,vault:AgencyFileVault,storage:LocalFileStorage)=>new GiftJobsRunner(db,worker,vault,storage,runtime),inject:[PrismaService,GiftAcceptanceWorker,AgencyFileVault,LocalFileStorage]}]};
+  return {module:GiftDeliveryModule,imports:[GiftAccountModule,DocumentsModule,AuthModule],controllers:[AgencyGiftController,GiftDeliveryController],providers:[AgencySessionGuard,GiftRegistrationService,{provide:AgencyPracticesStore,useFactory:(db:PrismaService)=>new AgencyPracticesStore(db),inject:[PrismaService]},{provide:AgencyFileVault,useFactory:()=>AgencyFileVault.open(storageRoot)},{provide:GiftDocumentReleaseStore,useFactory:(db:PrismaService)=>new GiftDocumentReleaseStore(db),inject:[PrismaService]},{provide:GiftInvitationsStore,useFactory:(db:PrismaService)=>new GiftInvitationsStore(db),inject:[PrismaService]},{provide:GiftAcceptanceWorker,useFactory:(db:PrismaService,vault:AgencyFileVault,storage:LocalFileStorage)=>new GiftAcceptanceWorker(db,vault,storage),inject:[PrismaService,AgencyFileVault,LocalFileStorage]},{provide:GiftJobsRunner,useFactory:(db:PrismaService,worker:GiftAcceptanceWorker,vault:AgencyFileVault,storage:LocalFileStorage)=>new GiftJobsRunner(db,worker,vault,storage,runtime),inject:[PrismaService,GiftAcceptanceWorker,AgencyFileVault,LocalFileStorage]}]};
  }
 }
 export function giftApplicationImports(env:NodeJS.ProcessEnv=process.env){return [GiftAccountModule,...(giftDeliveryConfigured(env)?[GiftDeliveryModule.register(env.DIMORA_AGENCY_STORAGE_ROOT!)]:[])];}

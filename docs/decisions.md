@@ -1,3 +1,12 @@
+## 27 ottobre 2026 — Rifiniture Spese dopo il riesame della PR #70
+
+Il committente approva la rifinitura della stessa PR: su telefono anello e tre coppie visibili, legenda/spiegazioni apribili e confronti estesi dopo l’elenco; su desktop disposizione a due colonne preservata. Il drill seleziona il mese per lista e totale, mantenendo il contesto del grafico; secondo clic senza nuova navigazione, Indietro ripristina focus e apertura. Il confronto resta per gli stessi giorni del precedente anno, con spiegazione esplicita del bisestile; nessun cambio monetario o temporale. [Esiti e limiti](v5/spese-andamento-mensile-20261027.md). Merge e rilascio restano separati.
+
+
+## 27 ottobre 2026 — Spese: anello principale, confronto mensile e dettaglio
+
+Il committente conferma elenco a sinistra e anello a destra, con barre di tre mesi sotto. Totale e anello seguono il filtro selezionato; l’espansione dei mesi non cambia il periodo dell’elenco. Il clic applica il segmento mensile e apre il dettaglio Acquisti/interventi, con conferme e scritture canoniche invariate. Aggregati completi tramite summary esistente: niente somme da pagina e niente fallback mock nella modalità reale. Su mobile anello e barre precedono l’elenco. [Lotto](v5/spese-andamento-mensile-20261027.md). Merge e rilascio restano decisioni distinte.
+
 ## 27 ottobre 2026 — Spese a pagina unica, layout Claude approvato
 
 Il committente approva la preview basata sullo screenshot Claude: periodo compatto in alto, elenco a sinistra e totale/distribuzione/confronti a destra. Su mobile totale compatto e analisi espandibile dopo l’elenco. Totale e confronti devono seguire lo stesso perimetro di filtri; gli aggregati mancanti nel contratto non si ricostruiscono dalle pagine caricate. Mese è un intervallo del filtro server esistente, separato dal periodo dei servizi. Nessun totale delle attive presentato come totale di righe archiviate. Moduli canonici e scritture esplicite preservati. [Implementazione e limiti](v5/spese-pagina-unica-20261027.md). Nessuna autorizzazione al merge o al rilascio implicita nell’incarico di sviluppo.
@@ -1455,3 +1464,14 @@ Una modifica riconosciuta aggiorna i pannelli collegati mediante un segnale di r
 Apri fonte usa documento/versione/SHA della citazione attraverso le letture esistenti autorizzate. La finestra mostra la pagina fisica citata e il testo riportato, con identità dei byte verificata e possibilità di confronto fra fonti. Non esistendo coordinate di evidenza affidabili, non si disegnano rettangoli o evidenziazioni che fingano una localizzazione del testo. Lo scope del riferimento controlla riaperture e chiusure; tastiera, focus iniziale visibile e ritorno al controllo di origine fanno parte del comportamento richiesto.
 
 Il ruolo proposto viene denominato ruolo nel documento, anche per successioni e persone storiche: non identifica un venditore o conferente attuale. Associazione umana e decisione sul fatto restano azioni separate; trovare e confermare una citazione non certifica identità, titolarità, completezza o conformità. La selezione per il futuro incarico conserva solo dati confermati e non sblocca la generazione senza modello e mapping approvati. [Candidato e verifiche distinte](v5/agency-documents-integration-20261103.md).
+
+
+## Agenzie — percorso operativo da incarico già acquisito (5 novembre 2026)
+
+L’agente entra dopo aver ottenuto l’incarico. La nuova pratica può partire dal PDF firmato, ma la lettura locale propone e l’agente conferma prima della creazione; non genera un nuovo contratto. Il profilo confermato in questa apertura è metadato dichiarato della pratica, distinto dai fatti citati/confermati del registro. La fonte deve essere condivisa nella pratica per evitare propagazione da originali privati. Checklist/situazioni e fase dichiarata restano metadati operativi con revisione e ricevute nello snapshot, senza schema nuovo.
+
+Fascicolo, Analisi, Planimetria, Annuncio, Trattativa e Stipula sono aree distinte. Il prossimo passo non inventa scadenze o «da fare oggi»; deriva dalla fase dichiarata e dallo stato della mappa. Gift compare nella Stipula conclusa e rimane un passaggio separato. Un acquisto dimostrativo non crea documenti ricevuti: finché non c’è il file si conserva soltanto la richiesta simulata. [Report e perimetro](v5/agency-journey-20261105.md).
+
+## Agenzie — stima rapida distinta dal computo salvato (5 novembre 2026)
+
+Per visualizzare le superfici non sono obbligatori conferme tecniche o configurazioni complete. La barra deve essere corroborata da testo e pixel; scala stampata e formato del foglio intero sono l’alternativa. Nessun formato assunto per default. La commerciale rapida è proposta dei soli vani disegnati, con coefficienti e maggiorazione muri espliciti modificabili: non si inventa un perimetro lordo. Questa stima locale non promuove fatti, Gift o annuncio e non modifica il computo rigoroso salvato. La persistenza di una stima marcata come tale resta un incremento distinto. [Report](v5/agency-quick-surfaces-20261105.md).

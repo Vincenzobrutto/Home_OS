@@ -223,6 +223,27 @@ export class GiftInvitationsStore{
    return {id:record.id,version:record.version,requiresAccount:true as const};
   },{maxWait:5000,timeout:15000});
  }
+ /** Keeps registration checks and account creation inside the invitation lock. */
+ async withRegistrationInvitation<T>(
+  id: string,
+  secret: string,
+  work: (tx: Prisma.TransactionClient, invitation: Pick<GiftInvitation, 'id' | 'version' | 'recipientEmail'>) => Promise<T>,
+ ): Promise<T> {
+  return this.db.$transaction(async tx => {
+   const { actor, practice, record } = await this.credentialContext(tx, id, secret);
+   const check = () => {
+    const now = new Date().toISOString();
+    requirePractice(actor, practice, 'export', now);
+    giftInvitationLanding(record, secret, now);
+    if (record.state !== 'invited') unavailable();
+   };
+   check();
+   const { id: invitationId, version, recipientEmail } = record;
+   const result = await work(tx, { id: invitationId, version, recipientEmail });
+   check();
+   return result;
+  }, { maxWait: 5000, timeout: 15000 });
+ }
  /** Authenticated recipient-only manifest preview, before or after its own claim. No state is changed. */
  async recipientPreview(accountId:string,id:string,secret:unknown){
   if(typeof accountId!=='string'||!/^[a-f0-9-]{36}$/iu.test(accountId))unavailable();

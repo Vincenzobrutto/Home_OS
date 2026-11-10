@@ -1,3 +1,52 @@
+## 10 novembre — Editor grafico condiviso e barra metrica verticale
+
+Gli strumenti grafici dell’annuncio sono disponibili anche per i vani del computo; proposta di spessore uniforme per i soli tramezzi comparabili e riconoscimento locale della quota verticale sul bordo. [Report](v5/agency-listing-graphic-editor-20261109.md).
+
+## 9 novembre — Planimetria Agenzie: una mappa, tre attività
+
+Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola superfici, Pianta per annuncio), verifiche collegate alla mappa, riepilogo unico della stima con Salva, coperture e scala salvate con `save_quick_estimate`, correzione OCR per etichette «4m». Ramo `claude/agency-plan-page-20261109`, PR impilata su #83. [Report](v5/agency-plan-page-simplify-20261109.md).
+
+Nelle verifiche collegate a un vano, **Modifica contorno** apre i vertici modificabili sulla stessa mappa.
+
+In Modifica pianta, Proponi pareti comuni distingue i tratti riscontrati sul PDF da quelli da verificare, suggeriti dai contorni contrapposti e indicati con tratteggio. Solo i tratti riscontrati possono modificare la geometria. Dopo la conferma, ogni tratto appare nell’editor come una fascia piena blu petrolio che copre le due linee dei vani. Salva modifiche alla planimetria conferma i contorni distinti dei vani. Nell’editor grafico il perimetro lordo compare come una linea blu scuro, con tratteggio per proposte e bozze. L’agente può ricalcarlo sul PDF e salvarlo separatamente come perimetro lordo, con riuso in Calcola superfici. Con Modifica perimetro può trascinare i vertici con Orto o Shift e traslare un intero lato in parallelo. I raccordi si aggiornano nella bozza; Salva perimetro conferma il solo contorno lordo. Le fasce interne dell’editor correggono i piccoli fuori asse e raccordano solo i distacchi brevi al perimetro visibile o alle pareti contigue. I raccordi sono grafici e rispettano le inclinazioni evidenti. Il perimetro confermato ha una linea più spessa e un margine di raccordo dedicato, anche se il muro interno è sottile. Il raccordo si ferma se il prolungamento attraversa un altro vano. Un clic su una fascia tratteggiata apre la verifica del singolo muro. L’agente può confermarla, correggerne l’asse con due punti o scartarla. I muri confermati diventano pieni e raccordati già durante la verifica. Salva modifiche alla planimetria registra conferme, assi corretti e scarti nella pratica. Riaprendo l’editor le conferme tornano piene e raccordate, e le scansioni successive escludono i tratti già verificati. Pianta per annuncio riusa il perimetro lordo salvato e i muri confermati con gli stessi raccordi, in un’unica immagine per anteprima e download PNG. I tratti scartati non ricompaiono come muri. Anche le linee dei divisori ricavate dai vani raggiungono la facciata vicina quando terminano lì. Il raccordo si ferma davanti a un altro vano. Nell’illustrazione, il muro perimetrale si riempie verso l’interno fino ai contorni dei vani che lo affiancano. Il filo esterno resta quello salvato e le aperture confermate interrompono la fascia. Nel PNG vengono riempiti anche gli interstizi stretti tra due facce interne compatibili. I tratti scartati restano esclusi. Il contatto con il balcone sul filo esterno non blocca il riempimento della facciata adiacente alla veranda. Dove il filo esterno ha un rientro o un’inclinazione diversa dal contorno del vano, il riempimento raggiunge la faccia interna più vicina entro la profondità locale. Porte e finestre salvate continuano a interrompere la fascia. Le due fasce dello stesso vano si raccordano all’angolo del perimetro anche se le facce interne non sono parallele al contorno esterno. In Pianta per annuncio, Ripristina un muro evidenzia le aperture esportate. La selezione sull’anteprima apre l’editor sul simbolo esatto. Ripristina muro lo rimuove dalla bozza e il salvataggio rigenera il PNG. Restano disponibili i contorni senza revisione e il flusso illustrativo per le pratiche precedenti. Cambiare i lati di un vano rende da verificare solo i tratti interessati.
+
+Quando due vani affacciano sullo stesso lungo lato obliquo del terrazzo, la pianta illustrativa può allineare i fronti alla sua inclinazione. Nella prova Roma, soggiorno, studio e terrazzo condividono un angolo di 6,573 gradi.
+
+Il distacco illustrativo può regolarizzare anche il perimetro esterno dei vani con vuoti interni, che restano protetti dai controlli geometrici. Su Roma, soggiorno–studio misura 6 pixel nei quattro punti controllati; i corridoi restano a 5–6 pixel.
+
+La resa per annuncio usa bordi più sottili e un distacco minimo di riferimento per tramezzi compatibili. Nella prova di Roma, il bianco tra studio e corridoio cucina passa da 1 a 6 pixel nei quattro punti misurati. Il PNG scaricato coincide con l’anteprima.
+
+La pianta illustrativa uniforma anche il distacco tra pareti oblique quasi parallele, quando i contorni consentono la correzione. I lati adiacenti mantengono la propria direzione e le aperture confermate hanno la precedenza.
+
+Se due vani vicini indicano la stessa facciata, la pianta illustrativa può allineare una piccola sporgenza della veranda. Il balcone adiacente segue la correzione senza cambiare larghezza né distanza dal nuovo bordo.
+
+La pianta illustrativa allinea automaticamente i gruppi di facce contrapposte su entrambi gli assi, anche quando una parete lunga confina con più vani. Usa un distacco comune per i tramezzi compatibili e scarta le correzioni che altererebbero incroci, contatti o distacchi reali.
+
+La normalizzazione dei distacchi vale anche per i contorni già salvati nell’annuncio. Si applica alla resa illustrativa e mantiene le protezioni per aperture confermate, allineamenti espliciti e vuoti.
+
+Nei tramezzi che si incontrano ad angolo, la pianta per annuncio può regolare lo stesso vertice sui due assi. Le distanze dei tratti vicini contribuiscono allo spessore di riferimento anche quando il tratto non può essere spostato in sicurezza.
+
+La pianta per annuncio raddrizza automaticamente i lati quasi orizzontali o verticali e rende uniforme il distacco tra tramezzi comparabili. Mantiene le separazioni reali, le diagonali evidenti e i dettagli già confermati. La resa si applica all’illustrazione e al PNG.
+
+Quando un contorno è in bozza in Calcola superfici, Salva modifiche nella barra della mappa registra il contorno e la stima insieme. Dopo la conferma, chiude la selezione e riabilita il cambio di attività.
+
+Sotto Balconi e pertinenze, Misure dell’appartamento mostra il lordo e la sua origine, la somma netta dei vani rilevati e il dettaglio per vano.
+
+Quando il nuovo contorno si sovrappone a un vano esistente, Aggiungi area al calcolo lo indica per nome. Se il vano è una pertinenza, si può tornare al suo contorno già presente. Un rifiuto generico del server indica come rivedere il disegno.
+
+In Calcola superfici, Aggiungi area al calcolo permette di scegliere Balcone o Cantina e tracciare un contorno separato. Una cantina nuova contribuisce al 25%; per un balcone si sceglie coperto (35%) o scoperto (25%). Il riepilogo si aggiorna sulla geometria salvata e chiede di confermare la stima aggiornata.
+
+Gli avvisi di sovrapposizione in Calcola superfici portano alla pertinenza sulla mappa. Il comando Correggi perimetro apre i vertici del lordo nella stessa zona anche mentre quel perimetro è in modifica.
+
+Calcola superfici inquadra prima l’appartamento e distingue i vani interni e il perimetro lordo dalle pertinenze. Il riepilogo esplicita la base di calcolo dell’appartamento, poi mostra pertinenze ponderate e totale. La scala usata è visibile e i controlli sono sotto Modifica scala.
+
+La barra della planimetria resta visibile durante lo scorrimento in Modifica pianta, Calcola superfici e Pianta per annuncio. Nella vista Annuncio include modifica, conferma di completezza e download PNG. Nella finestra dell’editor grafico gli strumenti restano in alto e il salvataggio in basso.
+
+Le conferme di salvataggio della pratica e della planimetria si chiudono con ×. Scorrono insieme alla pagina e lasciano visibili i comandi della mappa.
+
+## 5 novembre — superfici immediate senza modulo tecnico obbligatorio
+
+Lotto `codex/agency-quick-surfaces-20261105`, seguitoPR82, codice ba984f6 attivo localmente. OCR/pixel locali per barra e scala, formato foglio solo quando necessario, netto per vano e commerciale provvisoria con ipotesi modificabili nei dettagli. Computo rigoroso invariato e facoltativo. 93/93 iniziali e10/10 finali dei moduli modificati, statici/build e browser desktop375 verdi; pratica reale scala1:200 rilevata senza AI esterna/salvataggi. Stima in memoria, non persistita o certificata. [Report](v5/agency-quick-surfaces-20261105.md).
 ## 4 novembre — attivazione locale Agenzie e Gift
 
 Abilitati fascicolo Agenzie, link Gift manuale e worker di accettazione su `cfff2527` con un vault separato. Configurazione API soltanto. Verificate le capability con sessione normale, le route protette, lo scanner su file sintetico e i blocchi su AI a pagamento e invio email. [Report](v5/local-common-runtime-20261103.md#4-novembre--agenzie-e-gift-attive-nel-runtime-locale).
@@ -147,6 +196,14 @@ Controllo dopo semplificazione e prima della registrazione; rifinitura dai pixel
 ## 30 ottobre 2026 — Planimetrie: aggiunta e separazione manuale dei vani
 
 Disegno di un vano mancante o ritaglio da un vano esistente, anteprima non mutante e salvataggio atomico con storico/CAS; niente sovrapposizioni o doppio conteggio. Prompt di censimento corridoi e segnalazione spazi accorpati migliorati, ancora da misurare con AI reale. Backend578/578, HTTP25/25, guardie13/13, UI41/41; nessuna nuova spesa o modifica demo Alessio. [Report](v5/agency-manual-rooms-20261030.md).
+## 27 ottobre 2026 — PR #70: rifiniture dopo il riesame
+
+Vista mobile compatta con anello e tre mesi sempre visibili; espansione sui mesi recenti, contesto del drill mantenuto, secondo clic senza cronologia duplicata e Indietro con focus/dettaglio ripristinati. Confronti di febbraio spiegati senza cambiare il conteggio. Harness browser riproducibile nel repository; verifiche offline in corso, nessun rilascio. [Report](v5/spese-andamento-mensile-20261027.md).
+
+
+## 27 ottobre 2026 — Spese: anello e andamento mensile
+
+Nuovo lotto frontend: layout a due colonne approvato, anello sul periodo selezionato e confronto per mese nei tre mesi più recenti. Espansione del solo grafico, drill con filtri e ricerca preservati, dettaglio Acquisti/interventi apribile. Totali server completi, nessuna nuova API o scrittura dati. [Report e verifiche](v5/spese-andamento-mensile-20261027.md).
 
 ## 27 ottobre 2026 — Attivata la pagina unica Spese
 
@@ -2177,3 +2234,13 @@ Gift:prerequisiti copia,conferma Home,ammissione verificata e provenienza Docume
 
 ## 1 novembre2026 — Mappa digitale Agency/Gift/Home
 Ramo dedicato: scelta esplicita del piano revisionato nella Gift, copia indipendente con ambienti alla pubblicazione, pagina Home Mappa con posizioni persistenti sugli oggetti personali e correzione contorni con nuovi punti. Modifiche geometriche invalidano misure e richiedono riconferma pin. [Report, test e limiti](v5/gift-digital-plan-20261101.md); nessun merge/deploy o modifica demo Alessio.
+
+
+### Agenzie — percorso approvato del 5 novembre
+
+Nuova pratica da incarico con conferma esplicita, checklist/situazioni e richiesta documenti persistite, analisi per passaggi, annuncio e trattativa/stipula separati. Consegna Gift dopo la fase conclusa; richieste d’acquisto dimostrative senza finti originali. Collaudo e attivazione locale nel [report](v5/agency-journey-20261105.md); lettore incarico locale e conservativo, AI reale/fornitori/portali non estesi in questo lotto.
+
+
+### Planimetria agenzia semplificata — 5 novembre
+
+Disegno con quattro comandi principali, selezione grafica e strumenti contestuali; dettagli chiusi, calcolo/annuncio separati. Navigazione compatta375px e foglio contenuto nel riquadro iniziale con zoom. Codice72ade15,65UI/32responsive e statici/build/browser verdi; aggiornato solo frontend locale. [Report e limiti](v5/agency-plan-simple-20261105.md). Nessuna nuova analisi o scrittura di prova sugli originali.

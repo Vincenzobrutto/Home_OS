@@ -1,3 +1,53 @@
+L’editor condiviso e la lettura della barra metrica sul bordo sono nel candidato #84. Resta il collaudo su altre scansioni e su planimetrie con muri obliqui o profili complessi. [Report](v5/agency-listing-graphic-editor-20261109.md).
+
+## 9 novembre — Planimetria Agenzie semplificata (proposta implementata, da approvare)
+
+L’[editor grafico per l’annuncio](v5/agency-listing-graphic-editor-20261109.md) permette di trascinare i vertici e aggiungere o spostare porte e finestre sulla proposta, con originale opzionale. Verificato su pratica sintetica con salvataggio e riapertura del PNG. Computi e geometria della casa restano separati.
+
+
+Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTTP/DB di `save_quick_estimate`, conferma dei coefficienti balconi, commit e PR verso il consolidamento su decisione del committente. [Report](v5/agency-plan-page-simplify-20261109.md).
+
+L’editor per annuncio include Orto e trascinamento di una parete con le aperture agganciate. La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
+
+In Modifica pianta, Proponi pareti comuni distingue i tratti riscontrati sul PDF da quelli da verificare, suggeriti dai contorni contrapposti e indicati con tratteggio. Solo i tratti riscontrati possono modificare la geometria. Dopo la conferma, ogni tratto appare nell’editor come una fascia piena blu petrolio che copre le due linee dei vani. Salva modifiche alla planimetria conferma i contorni distinti dei vani. Nell’editor grafico il perimetro lordo compare come una linea blu scuro, con tratteggio per proposte e bozze. L’agente può ricalcarlo sul PDF e salvarlo separatamente come perimetro lordo, con riuso in Calcola superfici. Con Modifica perimetro può trascinare i vertici con Orto o Shift e traslare un intero lato in parallelo. I raccordi si aggiornano nella bozza; Salva perimetro conferma il solo contorno lordo. Le fasce interne dell’editor correggono i piccoli fuori asse e raccordano solo i distacchi brevi al perimetro visibile o alle pareti contigue. I raccordi sono grafici e rispettano le inclinazioni evidenti. Il perimetro confermato ha una linea più spessa e un margine di raccordo dedicato, anche se il muro interno è sottile. Il raccordo si ferma se il prolungamento attraversa un altro vano. Un clic su una fascia tratteggiata apre la verifica del singolo muro. L’agente può confermarla, correggerne l’asse con due punti o scartarla. I muri confermati diventano pieni e raccordati già durante la verifica. Salva modifiche alla planimetria registra conferme, assi corretti e scarti nella pratica. Riaprendo l’editor le conferme tornano piene e raccordate, e le scansioni successive escludono i tratti già verificati. Pianta per annuncio riusa il perimetro lordo salvato e i muri confermati con gli stessi raccordi, in un’unica immagine per anteprima e download PNG. I tratti scartati non ricompaiono come muri. Anche le linee dei divisori ricavate dai vani raggiungono la facciata vicina quando terminano lì. Il raccordo si ferma davanti a un altro vano. Nell’illustrazione, il muro perimetrale si riempie verso l’interno fino ai contorni dei vani che lo affiancano. Il filo esterno resta quello salvato e le aperture confermate interrompono la fascia. Nel PNG vengono riempiti anche gli interstizi stretti tra due facce interne compatibili. I tratti scartati restano esclusi. Il contatto con il balcone sul filo esterno non blocca il riempimento della facciata adiacente alla veranda. Dove il filo esterno ha un rientro o un’inclinazione diversa dal contorno del vano, il riempimento raggiunge la faccia interna più vicina entro la profondità locale. Porte e finestre salvate continuano a interrompere la fascia. Le due fasce dello stesso vano si raccordano all’angolo del perimetro anche se le facce interne non sono parallele al contorno esterno. In Pianta per annuncio, Ripristina un muro evidenzia le aperture esportate. La selezione sull’anteprima apre l’editor sul simbolo esatto. Ripristina muro lo rimuove dalla bozza e il salvataggio rigenera il PNG. Restano disponibili i contorni senza revisione e il flusso illustrativo per le pratiche precedenti. Cambiare i lati di un vano rende da verificare solo i tratti interessati.
+
+Quando due vani affacciano sullo stesso lungo lato obliquo del terrazzo, la pianta illustrativa può allineare i fronti alla sua inclinazione. Nella prova Roma, soggiorno, studio e terrazzo condividono un angolo di 6,573 gradi.
+
+Il distacco illustrativo può regolarizzare anche il perimetro esterno dei vani con vuoti interni, che restano protetti dai controlli geometrici. Su Roma, soggiorno–studio misura 6 pixel nei quattro punti controllati; i corridoi restano a 5–6 pixel.
+
+La resa per annuncio usa bordi più sottili e un distacco minimo di riferimento per tramezzi compatibili. Nella prova di Roma, il bianco tra studio e corridoio cucina passa da 1 a 6 pixel nei quattro punti misurati. Il PNG scaricato coincide con l’anteprima.
+
+La pianta illustrativa uniforma anche il distacco tra pareti oblique quasi parallele, quando i contorni consentono la correzione. I lati adiacenti mantengono la propria direzione e le aperture confermate hanno la precedenza.
+
+Se due vani vicini indicano la stessa facciata, la pianta illustrativa può allineare una piccola sporgenza della veranda. Il balcone adiacente segue la correzione senza cambiare larghezza né distanza dal nuovo bordo.
+
+La pianta illustrativa allinea automaticamente i gruppi di facce contrapposte su entrambi gli assi, anche quando una parete lunga confina con più vani. Usa un distacco comune per i tramezzi compatibili e scarta le correzioni che altererebbero incroci, contatti o distacchi reali.
+
+La normalizzazione dei distacchi vale anche per i contorni già salvati nell’annuncio. Si applica alla resa illustrativa e mantiene le protezioni per aperture confermate, allineamenti espliciti e vuoti.
+
+Nei tramezzi che si incontrano ad angolo, la pianta per annuncio può regolare lo stesso vertice sui due assi. Le distanze dei tratti vicini contribuiscono allo spessore di riferimento anche quando il tratto non può essere spostato in sicurezza.
+
+La pianta per annuncio raddrizza automaticamente i lati quasi orizzontali o verticali e rende uniforme il distacco tra tramezzi comparabili. Mantiene le separazioni reali, le diagonali evidenti e i dettagli già confermati. La resa si applica all’illustrazione e al PNG.
+
+Quando un contorno è in bozza in Calcola superfici, Salva modifiche nella barra della mappa registra il contorno e la stima insieme. Dopo la conferma, chiude la selezione e riabilita il cambio di attività.
+
+Sotto Balconi e pertinenze, Misure dell’appartamento mostra il lordo e la sua origine, la somma netta dei vani rilevati e il dettaglio per vano.
+
+Quando il nuovo contorno si sovrappone a un vano esistente, Aggiungi area al calcolo lo indica per nome. Se il vano è una pertinenza, si può tornare al suo contorno già presente. Un rifiuto generico del server indica come rivedere il disegno.
+
+In Calcola superfici, Aggiungi area al calcolo permette di scegliere Balcone o Cantina e tracciare un contorno separato. Una cantina nuova contribuisce al 25%; per un balcone si sceglie coperto (35%) o scoperto (25%). Il riepilogo si aggiorna sulla geometria salvata e chiede di confermare la stima aggiornata.
+
+Gli avvisi di sovrapposizione in Calcola superfici portano alla pertinenza sulla mappa. Il comando Correggi perimetro apre i vertici del lordo nella stessa zona anche mentre quel perimetro è in modifica.
+
+Calcola superfici inquadra prima l’appartamento e distingue i vani interni e il perimetro lordo dalle pertinenze. Il riepilogo esplicita la base di calcolo dell’appartamento, poi mostra pertinenze ponderate e totale. La scala usata è visibile e i controlli sono sotto Modifica scala.
+
+La barra della planimetria resta visibile durante lo scorrimento in Modifica pianta, Calcola superfici e Pianta per annuncio. Nella vista Annuncio include modifica, conferma di completezza e download PNG. Nella finestra dell’editor grafico gli strumenti restano in alto e il salvataggio in basso.
+
+Le conferme di salvataggio della pratica e della planimetria si chiudono con ×. Scorrono insieme alla pagina e lasciano visibili i comandi della mappa.
+
+## 5 novembre — superfici immediate senza modulo tecnico obbligatorio
+
+Lotto `codex/agency-quick-surfaces-20261105`, seguitoPR82, codice ba984f6 attivo localmente. OCR/pixel locali per barra e scala, formato foglio solo quando necessario, netto per vano e commerciale provvisoria con ipotesi modificabili nei dettagli. Computo rigoroso invariato e facoltativo. 93/93 iniziali e10/10 finali dei moduli modificati, statici/build e browser desktop375 verdi; pratica reale scala1:200 rilevata senza AI esterna/salvataggi. Stima in memoria, non persistita o certificata. [Report](v5/agency-quick-surfaces-20261105.md).
 ## 4 novembre — Agenzie e Gift abilitate in locale
 
 Disponibili la creazione dello spazio agenzia e il flusso di consegna manuale per destinatari locali già verificati. Il prossimo uso con destinatari remoti o nuovi account dipende da un'origine raggiungibile e dalla configurazione della verifica email. [Stato operativo](v5/local-common-runtime-20261103.md#4-novembre--agenzie-e-gift-attive-nel-runtime-locale).
@@ -149,11 +199,16 @@ Arco interno corretto localmente e involucri sostenuti dai muri, senza erosione 
 
 **Agenzie, ripresa del 30 ottobre:** verticale planimetria collegato a API e navigazione, provato nel browser desktop/375 con AI sintetica e database dedicato. Entrambe le viste preservate e computo persistito. Corrette revisione genitore e identita del perimetro riaperto; regressione finale frontend 1609/1609 (un retry massimo), typecheck/lint/build verdi. Prossimi gate: riconciliazione budget preesistente, prova con planimetria reale/provider dedicato, poi decisione di integrazione del committente. Nessun deploy o modifica demo Alessio. [Report corrente](v5/agency-navigation-validation-20261030.md).
 
+**Spese — andamento mensile, candidato separato:**
+
+Anello principale e tre mesi comparati sotto, drill mensile e dettaglio Acquisti/interventi richiudibile. Riepiloghi completi tramite API summary esistente, mai somme delle pagine; nessun backend o dato reale modificato. Rifinito dopo riesame: mobile compatto, contesto e focus ripristinati, febbraio spiegato e harness browser nel repository. Verificato offline: mock 1591/1591, nuovi 22/22, fixture 5/5, gruppo 79/79, typecheck/lint/build e browser 1440/873/390/320 verdi; candidato nella PR #70, merge e rilascio al committente. [Report](v5/spese-andamento-mensile-20261027.md).
+
+
 **Spese — dettaglio riparazioni nel Riepilogo:** rimossa la vecchia esclusione di repairs_works e la nota sul raggruppamento per lavoro, superata dalla PR #64. Righe di categoria da byCategory e totali server invariati. Regressione prima rossa e poi verde; gruppo 47/47 offline, typecheck/lint/build verdi; lotto chiuso e area liberata. [Report](v5/spese-riepilogo-riparazioni-20261026.md). App invariata, merge al committente.
 
 **Spese — pagina unica attiva:** implementazione frontend del layout scelto dal committente, periodo Anno/Mese/Intervallo, elenco/riepilogo affiancati e analisi mobile espandibile. Aggregati completi del server e confronti per gruppo con gli stessi filtri; nessuna somma di pagine parziali. [Report e verifiche](v5/spese-pagina-unica-20261027.md). PR #68 integrata e frontend attivato a68113f5; build e39/39 HTTP statici/anonimi verdi, API/PostgreSQL e guardie preservati. [Consegna](v5/spese-pagina-unica-rilascio-20261027.md). Verifica finale del committente; nessuna AI o scrittura applicativa durante il rilascio.
 
-**Spese — aggregati successivi separati:** subtotali completi per mese, aggregati per oggetto, filtro bollette senza mese fattura, ricerca estesa oltre descrizione/fornitore e confronto per gruppo in una sola risposta. Da progettare nel backend; non simulati sul dataset parziale del frontend.
+**Spese — aggregati successivi separati:** endpoint unico per mesi (il candidato mensile usa già riepiloghi completi separati), aggregati per oggetto, filtro bollette senza mese fattura, ricerca estesa oltre descrizione/fornitore e confronto per gruppo in una sola risposta. Da progettare nel backend; non simulati sul dataset parziale del frontend.
 
 
 **Gruppi Spese attivi:** PR #64 integrata su approvazione a ccc8469; API/frontend aggiornati insieme, cluster esistente ripristinato senza migrazioni. Build e34/34 HTTP statici/anonimi verdi; nessuna AI o scrittura applicativa eseguita. [Consegna e limiti](v5/spese-gruppi-rilascio-20261026.md). Verifica finale della pagina Spese al committente.
@@ -392,3 +447,13 @@ Gift:prerequisiti copia,conferma Home,ammissione verificata e provenienza Docume
 
 ## Incremento Gift mappa — 1 novembre2026
 Implementato e collaudato nel ramo dedicato con dipendenza PR72: mappa/ambienti dalla planimetria Agency alla Home, pin sugli oggetti normali, correzione vertici e invalidazioni. Review/merge/attivazione al committente. Prossimi: prova agenzia reale con documenti/budget autorizzati, modello mandato approvato, guida su mappe dense e profilo multipiano se necessario. [Risultati e limiti](v5/gift-digital-plan-20261101.md).
+
+
+### Agenzie — percorso approvato del 5 novembre
+
+Nuova pratica da incarico con conferma esplicita, checklist/situazioni e richiesta documenti persistite, analisi per passaggi, annuncio e trattativa/stipula separati. Consegna Gift dopo la fase conclusa; richieste d’acquisto dimostrative senza finti originali. Collaudo e attivazione locale nel [report](v5/agency-journey-20261105.md); lettore incarico locale e conservativo, AI reale/fornitori/portali non estesi in questo lotto.
+
+
+### Planimetria agenzia semplificata — 5 novembre
+
+Disegno con quattro comandi principali, selezione grafica e strumenti contestuali; dettagli chiusi, calcolo/annuncio separati. Navigazione compatta375px e foglio contenuto nel riquadro iniziale con zoom. Codice72ade15,65UI/32responsive e statici/build/browser verdi; aggiornato solo frontend locale. [Report e limiti](v5/agency-plan-simple-20261105.md). Nessuna nuova analisi o scrittura di prova sugli originali.

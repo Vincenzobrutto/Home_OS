@@ -5,7 +5,7 @@ import {parseGiftClassification} from './gift-classification';
 
 type Packet=ReturnType<typeof prepareGiftFromRegistry>;
 export class GiftInvitationError extends Error {
-  constructor(readonly code:'invalid_input'|'unavailable'|'revision_conflict'|'benefit_unavailable'|'idempotency_conflict'){super(code);}
+  constructor(readonly code:'invalid_input'|'unavailable'|'revision_conflict'|'benefit_unavailable'|'idempotency_conflict'|'registration_unavailable'){super(code);}
 }
 function fail(code:GiftInvitationError['code']):never{throw new GiftInvitationError(code);}
 function object(v:unknown,keys:string[]):Record<string,unknown>{
