@@ -588,6 +588,63 @@ export function joinedSharedWallBands(drawing:PlanShape[],walls:SharedPlanWall[]
  });
 }
 
+export function listingPublicationWalls(rooms:PlanShape[],reviews:WallReview[],perimeter?:PlanShape){
+ const reviewed=reviews.flatMap(review=>{
+  const wall=wallReviewReference(rooms,review);
+  return wall?[{wall,axis:review.axis,status:review.status}]:[];
+ });
+ const confirmed=reviewed.filter(item=>item.status==='confirmed');
+ const bands=joinedSharedWallBands(rooms,confirmed.map(item=>item.wall),perimeter,confirmed.map(item=>item.axis));
+ const covered=new Map<string,Segment[]>();
+ reviewed.forEach(({wall})=>{
+  const original=sharedWallBand(rooms,wall);
+  if(!original)return;
+  const [a,b,c,d]=original as [Point,Point,Point,Point];
+  for(const [i,side] of ([[a,b],[c,d]] as Segment[]).entries()){
+   const {id,edge}=wall[i]!;
+   const key=JSON.stringify([id,edge]);
+   covered.set(key,[...(covered.get(key)??[]),side]);
+  }
+ });
+ return {bands:bands.filter(band=>band!==null),covered};
+}
+
+export function listingPublicationSegments(room:PlanShape,original:PlanShape|undefined,covered:Map<string,Segment[]>,perimeter?:PlanShape){
+ const outside=perimeter?[perimeter.points,...perimeter.holes].flatMap(edges):[];
+ const sourceEdges=original?edges(original.points):[];
+ return [...room.holes.flatMap(edges),...edges(room.points).flatMap((side,index)=>{
+  const [a,b]=side,length=distance(a,b);
+  if(length<EPSILON)return [];
+  const matchingIndex=room.points.length===original?.points.length?index:
+   sourceEdges.findIndex(([start,end])=>samePoint(start,a)&&samePoint(end,b));
+  const source=sourceEdges[matchingIndex];
+  const intervals=(source?covered.get(JSON.stringify([room.id,matchingIndex]))??[]:[]).map(([start,end])=>
+   [fraction(start,source!),fraction(end,source!)].sort((x,y)=>x-y));
+  if(perimeter&&!isAppurtenance(room)&&room.kind!=='excluded'){
+   for(const edge of outside){
+    const run=distance(...edge);
+    if(run<EPSILON)continue;
+    const projection=edge.map(point=>fraction(point,side)).sort((x,y)=>x-y);
+    const from=Math.max(0,projection[0]!),to=Math.min(1,projection[1]!);
+    if((to-from)*length<Math.min(length,run)*.65||Math.abs(projection[1]!-projection[0]!)*length<run*.99)continue;
+    const winding=Math.sign(signedArea(room.points));
+    if(edge.every(point=>cross(a,b,point)*winding>EPSILON))continue;
+    const limit=Math.min(28,length*.28);
+    if([from,to].every(t=>Math.abs(cross(...edge,at(side,t)))/run<=limit))intervals.push([from,to]);
+   }
+  }
+  const remaining:Segment[]=[];
+  let cursor=0;
+  for(const [start,end] of intervals.sort((x,y)=>x[0]!-y[0]!)){
+   const from=unit(start!),to=unit(end!);
+   if(from>cursor+EPSILON)remaining.push([at(side,cursor),at(side,from)]);
+   cursor=Math.max(cursor,to);
+  }
+  if(cursor<1-EPSILON)remaining.push([at(side,cursor),b]);
+  return remaining;
+ })];
+}
+
 function alignTerraceFrontage(drawing:PlanShape[],span:number,protectedRooms:ReadonlySet<string>){
  const terraces=drawing.filter(room=>room.kind!=='excluded'&&/\bterrazz/i.test(room.label));
  const interior=drawing.filter(room=>room.kind!=='excluded'&&!isAppurtenance(room)&&!protectedRooms.has(room.id));

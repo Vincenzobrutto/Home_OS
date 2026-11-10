@@ -98,7 +98,8 @@ export function ListingPlanReview(p:Props){
  },[isDragging]);
  const [working,setWorking]=useState(false);
  const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom({requireControl:true});
- const baseline=useMemo(()=>p.editPlan?p.rooms:listingIllustration(p.rooms,p.saved),[p.editPlan,p.rooms,p.saved]);
+ const publishedWalls=!!p.wallReviews?.some(review=>wallReviewReference(p.rooms,review));
+ const baseline=useMemo(()=>p.editPlan||publishedWalls?p.rooms:listingIllustration(p.rooms,p.saved),[p.editPlan,p.rooms,p.saved,publishedWalls]);
  const drawing=useMemo(()=>{
   const edits=new Map(contours.map(c=>[c.id,c.geometry]));
   return baseline.map(room=>({...room,...edits.get(room.id)}));
@@ -256,8 +257,9 @@ export function ListingPlanReview(p:Props){
   :draggedRoom?drawing.map(room=>room.id===draggedRoom.id?draggedRoom:room):drawing;
  const editedAxis:[Point,Point]|undefined=wallEdit?.length===2?[wallEdit[0]!,wallEdit[1]!]:undefined;
  const selectedFaces=selectedWall===null?undefined:wallProposal?.unchecked[selectedWall];
+ const wallDrawing=p.editPlan?previewDrawing:p.rooms;
  const reviewedBands=[...(p.wallReviews??[]),...pendingReviews].flatMap(review=>{
-  const wall=wallReviewReference(previewDrawing,review);
+  const wall=wallReviewReference(wallDrawing,review);
   return wall?[{wall,status:review.status,axis:review.axis}]:[];
  });
  const wallBands=[
@@ -352,7 +354,7 @@ export function ListingPlanReview(p:Props){
  const scaleToSave=manualScale??(automaticBar?{mode:'bar' as const,start:automaticBar.start,end:automaticBar.end,metres:automaticBar.metres}:undefined);
  function saveDetails(){
   const explicitIds=new Set(contours.map(contour=>contour.id));
-  const original=p.editPlan?[]:listingDrawing(p.rooms,alignments);
+  const original=p.editPlan?[]:publishedWalls?p.rooms:listingDrawing(p.rooms,alignments);
   const savedContours=p.editPlan?contours:drawing.flatMap(({id,points,holes},i)=>{
    const before=original[i];
    const geometry={points,holes};
@@ -455,7 +457,7 @@ export function ListingPlanReview(p:Props){
    })}
    {wallBands.length>0&&!calibrating&&<g aria-label="Pareti comuni sulla tavola" pointerEvents="none"
     fill={wallProposal?'#be6618':'#005867'} stroke={wallProposal?'#be6618':'#005867'} opacity={1} strokeWidth={wallProposal?2:6}>
-    {joinedSharedWallBands(previewDrawing,wallBands.map(item=>item.wall),showPerimeter?previewPerimeter:undefined,wallBands.map(item=>item.axis)).map((band,i)=>{
+    {joinedSharedWallBands(wallDrawing,wallBands.map(item=>item.wall),showPerimeter?previewPerimeter:undefined,wallBands.map(item=>item.axis)).map((band,i)=>{
      const {pending,confirmed,wall}=wallBands[i]!;
      const unchecked=pending!==undefined;
      const canSelect=unchecked&&!busy&&(!wallEdit||!!editedAxis);

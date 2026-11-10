@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import type {PlanShape, Point} from './PlanMeasurementView';
 import {carryListingOpening, changeListingVertex, listingAlignmentGuides, listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, moveListingWall, placeListingOpening, placeScaledListingDoor, alignListingWall, listingWalls, simplifyListingRooms, suggestListingAlignments} from './listingGeometry';
-import {joinedSharedWallBands, proposeSharedPlanWalls, suggestInternalWallThickness} from './listingGeometry';
+import {joinedSharedWallBands, listingPublicationSegments, listingPublicationWalls, proposeSharedPlanWalls, recordWallReview, suggestInternalWallThickness} from './listingGeometry';
 
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
@@ -74,6 +74,23 @@ it('straightens small angular drift and keeps distinctly sloped walls and wider 
  expect(Math.max(...level.map(([x])=>x))).toBeCloseTo(90,0);
  const slope=angles(10);
  expect(Math.abs(slope[0]![1]-slope[1]![1])).toBeGreaterThan(9);
+});
+
+it('publishes corrected joined walls and replaces their two strokes and the inner facade stroke',()=>{
+ const drawing=[
+  room('a',[[10,10],[48,10],[48,80],[10,80]]),
+  room('b',[[52,10],[90,10],[90,80],[52,80]]),
+  room('c',[[94,10],[130,10],[130,80],[94,80]]),
+ ];
+ const perimeter=room('gross',[[4,4],[136,4],[136,96],[4,96]]);
+ const confirmed=recordWallReview(drawing,[{id:'a',edge:1},{id:'b',edge:3}],'confirmed',[[51,11],[51,79]]);
+ const discarded=recordWallReview(drawing,[{id:'b',edge:1},{id:'c',edge:3}],'discarded');
+ const {bands,covered}=listingPublicationWalls(drawing,[confirmed,discarded],perimeter);
+ expect(bands).toHaveLength(1);
+ expect(bands[0]).toContainEqual([49,96]);
+ expect(bands[0]).toContainEqual([53,96]);
+ expect(listingPublicationSegments(drawing[0]!,drawing[0],covered,perimeter)).toEqual([[[48,80],[10,80]]]);
+ expect(listingPublicationSegments(drawing[1]!,drawing[1],covered,perimeter)).toEqual([[[90,80],[52,80]]]);
 });
 
 describe('listing illustration',()=>{

@@ -1,25 +1,26 @@
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
-import type {ListingDetails,ListingOpening,ListingPlanDraft,QuickEstimateScale} from './api';
+import type {ListingDetails,ListingOpening,ListingPlanDraft,QuickEstimateScale,WallReview} from './api';
 import type {PlanShape,Point} from './PlanMeasurementView';
 import {isBalcony,paperMetresPerPixel} from './scaleDetection';
 import type {MeasurementConfiguration} from './measurement-types';
-import {listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, listingWalls} from './listingGeometry';
+import {listingDoorOpposite, listingIllustration, listingOpeningOnDrawing, listingPublicationSegments, listingPublicationWalls, listingWalls} from './listingGeometry';
 import {ListingPlanReview} from './ListingPlanReview';
 import styles from './practice-plan.module.css';
 
 import {LISTING_DRAWING_PIXELS,LISTING_OUTER_STROKE,LISTING_PARTITION_STROKE,listingRoomFill} from './listingStyle';
 
-function listingImage(rooms: PlanShape[],details?:ListingDetails) {
+function listingImage(rooms: PlanShape[],details?:ListingDetails,gross?:PlanShape,reviews:WallReview[]=[]) {
  let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
- const drawing = listingIllustration(rooms,details);
- for (const room of drawing) {
-  for (const [x,y] of room.points) {
-   left = Math.min(left, x);
-   top = Math.min(top, y);
-   right = Math.max(right, x);
-   bottom = Math.max(bottom, y);
-  }
+ const {bands,covered}=listingPublicationWalls(rooms,reviews,gross);
+ const useReviewedGeometry=covered.size>0;
+ const overrides=new Map(details?.contours?.map(entry=>[entry.id,entry.geometry]));
+ const drawing=useReviewedGeometry?rooms.map(room=>({...room,...overrides.get(room.id)})):listingIllustration(rooms,details);
+ for (const [x,y] of [...drawing.flatMap(room=>room.points),...(gross?.points??[]),...bands.flat()]) {
+  left = Math.min(left, x);
+  top = Math.min(top, y);
+  right = Math.max(right, x);
+  bottom = Math.max(bottom, y);
  }
  const width = right - left, height = bottom - top;
  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) throw new Error('invalid_plan_bounds');
@@ -42,7 +43,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  context.lineCap = 'round';
  const position = ([x,y]: [number,number]): [number,number] => [(x-left)*scale+margin,(y-top)*scale+margin];
 
- const outlines = drawing.map(room => {
+ const outlinePath=(room:PlanShape)=>{
   const outline = new Path2D();
   for (const ring of [room.points,...room.holes]) {
    ring.forEach((point,index) => {
@@ -52,6 +53,10 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
    });
    outline.closePath();
   }
+  return outline;
+ };
+ const outlines = drawing.map(room => {
+  const outline=outlinePath(room);
   context.fillStyle = listingRoomFill(room);
   context.fill(outline,'evenodd');
   return {room,outline};
@@ -63,11 +68,13 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
   outdoorWalls.moveTo(...position(a));
   outdoorWalls.lineTo(...position(b));
  }
- for (const [a,b] of listingWalls(drawing.filter(room=>!outdoor.includes(room)))) {
+ const interior=drawing.filter(room=>!outdoor.includes(room));
+ const remaining=gross||useReviewedGeometry?interior.flatMap(room=>listingPublicationSegments(room,rooms.find(source=>source.id===room.id),covered,gross)):listingWalls(interior);
+ for (const [a,b] of remaining) {
   const onBounds = ([axis,value]: [number,number]) =>
    Math.abs(a[axis]!-value)<1e-6 && Math.abs(b[axis]!-value)<1e-6;
   const bounds: Array<[number,number]> = [[0,left],[0,right],[1,top],[1,bottom]];
-  const line = bounds.some(onBounds) ? perimeter : partitions;
+  const line = !gross&&bounds.some(onBounds) ? perimeter : partitions;
   line.moveTo(...position(a));
   line.lineTo(...position(b));
  }
@@ -77,8 +84,14 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
  context.strokeStyle = '#253130';
  context.lineWidth = LISTING_PARTITION_STROKE;
  context.stroke(partitions);
- context.lineWidth = LISTING_OUTER_STROKE;
- context.stroke(perimeter);
+ context.fillStyle = context.strokeStyle;
+ for(const band of bands){
+  context.beginPath();
+  band.forEach((point,index)=>{if(index===0)context.moveTo(...position(point));else context.lineTo(...position(point));});
+  context.closePath();context.fill();
+ }
+ context.lineWidth = gross?LISTING_OUTER_STROKE+4:LISTING_OUTER_STROKE;
+ context.stroke(gross?outlinePath(gross):perimeter);
 
  for (const opening of details?.openings??[]) {
   const placed=listingOpeningOnDrawing(opening,walls,originalSpan);
@@ -148,6 +161,7 @@ function listingImage(rooms: PlanShape[],details?:ListingDetails) {
 
 type ListingExportProps={
  rooms:PlanShape[];disabled:boolean;autoPreview?:boolean;details?:ListingDetails;toolbarHost?:HTMLElement|null;
+ perimeter?:Pick<PlanShape,'points'|'holes'>|null;wallReviews?:WallReview[];
  review?:{sourceUrl:string;width:number;height:number;scale?:QuickEstimateScale;calibration?:MeasurementConfiguration['calibration'];hints?:ListingOpening[]};
  onSave?:(details:ListingPlanDraft)=>void;
 };
@@ -162,17 +176,18 @@ export function listingScale({scale,calibration,width,height}:Pick<NonNullable<L
  return [factor,factor];
 }
 
-export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review,onSave,toolbarHost}:ListingExportProps) {
+export function ListingPlanExport({rooms,disabled,autoPreview=false,details,review,onSave,toolbarHost,perimeter,wallReviews}:ListingExportProps) {
+ const gross=perimeter?{...perimeter,id:'gross',label:'Perimetro lordo'}:undefined;
  const [reviewing,setReviewing]=useState(false);
  // In the listing task the image is drawn on entry: the component is keyed by geometry revision.
- const [initial] = useState(()=>{if(!autoPreview||!rooms.length)return {preview:'',error:false};try{return {preview:listingImage(rooms,details),error:false};}catch{return {preview:'',error:true};}});
+ const [initial] = useState(()=>{if(!autoPreview||!rooms.length)return {preview:'',error:false};try{return {preview:listingImage(rooms,details,gross,wallReviews),error:false};}catch{return {preview:'',error:true};}});
  const [preview,setPreview] = useState(initial.preview);
  const [complete,setComplete] = useState(false);
  const [error,setError] = useState(initial.error);
 
  function open() {
   try {
-   setPreview(listingImage(rooms,details));
+   setPreview(listingImage(rooms,details,gross,wallReviews));
    setError(false);
   } catch {
    setPreview('');
@@ -196,7 +211,7 @@ export function ListingPlanExport({rooms,disabled,autoPreview=false,details,revi
   <button type="button" disabled={disabled} onClick={open}>Anteprima annuncio</button></>}
   {autoPreview&&!rooms.length&&<p>Salva almeno un vano per preparare l’immagine dell’annuncio.</p>}
   {!toolbarHost&&editAction}
-  {review&&onSave&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} scaleLabel={review.scale?'Scala salvata in Calcola superfici':'Scala del computo'} rooms={rooms} saved={details} disabled={disabled}
+  {review&&onSave&&reviewing&&<ListingPlanReview {...review} metresPerPixel={listingScale(review)} scaleLabel={review.scale?'Scala salvata in Calcola superfici':'Scala del computo'} rooms={rooms} saved={details} perimeter={gross?{shape:gross,status:'saved'}:null} wallReviews={wallReviews} disabled={disabled}
    onClose={()=>setReviewing(false)} onApply={draft=>{onSave(draft);setReviewing(false);}}/>}
   {error&&<p role="alert">Impossibile creare l’immagine della planimetria.</p>}
   {preview&&<div>
