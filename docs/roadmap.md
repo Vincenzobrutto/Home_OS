@@ -9,6 +9,8 @@ Prossimi passi: prova su pratica reale in browser visibile (OCR barra), test HTT
 
 L’editor per annuncio include Orto e trascinamento di una parete con le aperture agganciate. La correzione dei contorni è ora accessibile dalle verifiche della PR #84. Resta la prova utente sulla stessa pratica.
 
+La pianta per annuncio raddrizza automaticamente i lati quasi orizzontali o verticali e rende uniforme il distacco tra tramezzi comparabili. Mantiene le separazioni reali, le diagonali evidenti e i dettagli già confermati. La resa si applica all’illustrazione e al PNG.
+
 Quando un contorno è in bozza in Calcola superfici, Salva modifiche nella barra della mappa registra il contorno e la stima insieme. Dopo la conferma, chiude la selezione e riabilita il cambio di attività.
 
 Sotto Balconi e pertinenze, Misure dell’appartamento mostra il lordo e la sua origine, la somma netta dei vani rilevati e il dettaglio per vano.

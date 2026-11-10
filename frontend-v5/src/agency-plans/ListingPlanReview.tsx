@@ -83,11 +83,11 @@ export function ListingPlanReview(p:Props){
  },[isDragging]);
  const [working,setWorking]=useState(false);
  const {zoom,setZoom,scrollRef,mapRef}=usePlanZoom({requireControl:true});
+ const baseline=useMemo(()=>p.editPlan?p.rooms:listingIllustration(p.rooms,p.saved),[p.editPlan,p.rooms,p.saved]);
  const drawing=useMemo(()=>{
-  if(!p.editPlan)return listingIllustration(p.rooms,{alignments:alignments??[],contours});
   const edits=new Map(contours.map(c=>[c.id,c.geometry]));
-  return p.rooms.map(room=>({...room,...edits.get(room.id)}));
- },[p.editPlan,p.rooms,alignments,contours]);
+  return baseline.map(room=>({...room,...edits.get(room.id)}));
+ },[baseline,contours]);
  const walls=useMemo(()=>listingWalls(drawing),[drawing]);
  const xs=p.rooms.flatMap(room=>room.points.map(([x])=>x)),ys=p.rooms.flatMap(room=>room.points.map(([,y])=>y));
  const span=Math.max(1,Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
@@ -263,6 +263,16 @@ export function ListingPlanReview(p:Props){
  }
  const automaticBar=!p.metresPerPixel?detectedScale?.bar:undefined;
  const scaleToSave=manualScale??(automaticBar?{mode:'bar' as const,start:automaticBar.start,end:automaticBar.end,metres:automaticBar.metres}:undefined);
+ function saveDetails(){
+  const explicitIds=new Set(contours.map(contour=>contour.id));
+  const original=p.editPlan?[]:listingDrawing(p.rooms,alignments);
+  const savedContours=p.editPlan?contours:drawing.flatMap(({id,points,holes},i)=>{
+   const before=original[i];
+   const geometry={points,holes};
+   return explicitIds.has(id)||JSON.stringify(geometry)!==JSON.stringify({points:before?.points,holes:before?.holes})?[{id,geometry}]:[];
+  });
+  p.onApply({...(scaleToSave?{scale:scaleToSave}:{}),openings:rows.filter(row=>row.confirmed).map(row=>row.opening),alignments:alignments??[],contours:savedContours});
+ }
  const shown=active?(draggedOpening??shownOpening(active)):null;
  return <dialog className={`${styles.panel} ${styles.builderDialog} ${styles.listingReviewDialog}`} ref={dialog} aria-label={p.editPlan?'Editor grafico della planimetria':'Editor pianta per annuncio'} onCancel={e=>{e.preventDefault();p.onClose();}}>
   <h3>{p.editPlan?'Modifica la planimetria':'Modifica pianta per l’annuncio'}</h3>
@@ -372,7 +382,7 @@ export function ListingPlanReview(p:Props){
   <div className={styles.listingReviewFooter}>
    <span>{rows.length-pending.length} aperture confermate{pending.length>0?' · le proposte non confermate non compaiono nel PNG':''}</span>
    <button type="button" onClick={p.onClose}>Chiudi</button>
-   <button type="button" disabled={busy||calibrating||!!start||!!drag} onClick={()=>p.onApply({...(scaleToSave?{scale:scaleToSave}:{}),openings:rows.filter(row=>row.confirmed).map(row=>row.opening),alignments:alignments??[],contours})}>{p.editPlan?'Salva modifiche alla planimetria':'Salva dettagli per l’annuncio'}</button>
+   <button type="button" disabled={busy||calibrating||!!start||!!drag} onClick={saveDetails}>{p.editPlan?'Salva modifiche alla planimetria':'Salva dettagli per l’annuncio'}</button>
   </div>
  </dialog>;
 }

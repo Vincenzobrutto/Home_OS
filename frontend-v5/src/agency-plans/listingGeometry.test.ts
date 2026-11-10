@@ -6,6 +6,27 @@ import {suggestInternalWallThickness} from './listingGeometry';
 const room = (id: string, points: Point[], holes: Point[][]=[]): PlanShape => ({id,label:id,points,holes});
 
 describe('listing illustration',()=>{
+ it('squares slightly tilted sides and evens comparable interior gaps without moving a balcony',()=>{
+  const a=room('Soggiorno',[[0,0],[100,.7],[100.6,80],[0,80]]);
+  const b=room('Bagno',[[104,0],[204,0],[204,80],[104,80]]);
+  const c=room('Camera',[[210,0],[310,0],[310,80],[210,80]]);
+  const balcony={...room('Balcone',[[316,0],[355,0],[355,80],[316,80]]),kind:'balcony'};
+  const original=[a,b,c,balcony],copy=structuredClone(original);
+  const [left,middle,right,terrace]=listingIllustration(original);
+  expect(left!.points[0]![1]).toBe(left!.points[1]![1]);
+  expect(left!.points[1]![0]).toBe(left!.points[2]![0]);
+  expect(middle!.points[0]![0]-left!.points[1]![0]).toBeCloseTo(right!.points[0]![0]-middle!.points[1]![0]);
+  expect(terrace!.points).toEqual(balcony.points);
+  expect(original).toEqual(copy);
+ });
+ it('keeps meaningful diagonals and sides associated with saved openings',()=>{
+  const a=room('Studio',[[0,0],[100,.5],[100,75],[75,100],[0,100]]);
+  const result=listingIllustration([a])[0]!;
+  expect(result.points.slice(2,4)).toEqual([[100,75],[75,100]]);
+  const details={alignments:[],openings:[{kind:'window' as const,start:[20,.1] as Point,end:[80,.4] as Point,fixed:true}]};
+  expect(listingIllustration([a],details)[0]!.points).toEqual(a.points);
+ });
+
  it('smooths small tracing deviations while retaining diagonals, recesses and inner holes',()=>{
   const outline = room('Soggiorno',[[0,0],[30,.3],[60,0],[100,0],[100,30],[85,30],[85,50],[100,50],[100,70],[80,90],[0,90]],
    [[[20,20],[30,20],[30,30],[20,30]]]);

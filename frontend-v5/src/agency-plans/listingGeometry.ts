@@ -297,12 +297,52 @@ export function listingWalls(rooms: PlanShape[]) {
  });
 }
 
-export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetails,'alignments'|'contours'>){
+export function listingIllustration(rooms:PlanShape[],details?:Pick<ListingDetails,'alignments'|'contours'|'openings'>){
  const overrides=new Map(details?.contours?.map(entry=>[entry.id,entry.geometry]));
- return listingDrawing(rooms,details?.alignments).map(room=>{
+ const drawing=listingDrawing(rooms,details?.alignments).map(room=>{
   const geometry=overrides.get(room.id);
   return geometry?{...room,...geometry}:room;
  });
+ const points=drawing.flatMap(room=>room.points);
+ if(!points.length||points.length>4096)return drawing;
+ const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
+ const protectedRooms=new Set(overrides.keys());
+ for(const alignment of details?.alignments??[]){
+  protectedRooms.add(alignment.target.roomId);
+  protectedRooms.add(alignment.reference.roomId);
+ }
+ for(const room of drawing){
+  if(details?.openings?.some(({start,end})=>edges(room.points).some(edge=>{
+   if(distance(...edge)<EPSILON)return false;
+   return [start,end].every(point=>distance(point,at(edge,unit(fraction(point,edge))))<span*.015);
+  })))protectedRooms.add(room.id);
+ }
+ const squared=orthogonalListingRooms(drawing,span,protectedRooms);
+ return suggestInternalWallThickness(squared,protectedRooms)?.drawing??squared;
+}
+
+function orthogonalListingRooms(drawing:PlanShape[],span:number,protectedRooms:Set<string>){
+ let result=drawing;
+ for(const original of drawing){
+  if(original.kind==='excluded'||protectedRooms.has(original.id))continue;
+  let room=original;
+  const axes=edges(room.points).map(([a,b])=>{
+   const axis=Math.abs(a[0]-b[0])<Math.abs(a[1]-b[1])?0:1;
+   return distance(a,b)>=span*.015&&Math.abs(a[axis]-b[axis])<=Math.min(span*.0075,distance(a,b)*.035)?axis:null;
+  });
+  for(let i=0;i<axes.length;i++){
+   const axis=axes[i],next=(i+1)%axes.length,previous=(i+axes.length-1)%axes.length;
+   if(axis==null||axes[next]===axis||axes[previous]===axis)continue;
+   const a:Point=[...room.points[i]!],b:Point=[...room.points[next]!];
+   if(Math.abs(a[axis]-b[axis])<EPSILON)continue;
+   a[axis]=b[axis]=(a[axis]+b[axis])/2;
+   const corrected=changeListingPoints(result,room,new Map([[i,a],[next,b]]),true);
+   if(!corrected)continue;
+   room=corrected;
+   result=result.map(item=>item.id===room.id?room:item);
+  }
+ }
+ return result;
 }
 
 const distance=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
@@ -481,7 +521,7 @@ export function moveListingWall(drawing:PlanShape[],id:string,index:number,delta
 
 /** Propose one common thickness for comparable, facing interior walls.
  * Only unambiguous straight pairs are moved; the centre of each wall stays put. */
-export function suggestInternalWallThickness(drawing:PlanShape[]){
+export function suggestInternalWallThickness(drawing:PlanShape[],protectedRooms?:ReadonlySet<string>){
  const points=drawing.flatMap(room=>room.points);
  if(!points.length||points.length>4096)return null;
  const span=Math.max(...([0,1] as const).map(axis=>Math.max(...points.map(p=>p[axis]))-Math.min(...points.map(p=>p[axis]))));
@@ -499,7 +539,9 @@ export function suggestInternalWallThickness(drawing:PlanShape[]){
  const pairs=faces.flatMap((a,i)=>faces.slice(i+1).flatMap(b=>{
   if(a.id===b.id||a.axis!==b.axis||a.inward===b.inward||(b.offset-a.offset)*a.inward>=0)return [];
   const gap=Math.abs(b.offset-a.offset),start=Math.max(a.from,b.from),end=Math.min(a.to,b.to);
-  if(gap>span*.035||end-start<.85*Math.max(a.to-a.from,b.to-b.from))return [];
+  const lengths=[a.to-a.from,b.to-b.from];
+  const minimumOverlap=protectedRooms?Math.max(span*.035,.65*Math.min(...lengths)):.85*Math.max(...lengths);
+  if(gap<EPSILON||gap>span*.035||end-start<minimumOverlap)return [];
   const middle=(a.offset+b.offset)/2;
   const blocked=[.2,.5,.8].some(t=>{
    const along=start+(end-start)*t;
@@ -517,14 +559,15 @@ export function suggestInternalWallThickness(drawing:PlanShape[]){
  const used=new Set<string>();
  const keys=(face:typeof faces[number])=>[face.id+':'+face.index,face.id+':'+(face.index+1)%drawing.find(room=>room.id===face.id)!.points.length];
  for(const {a,b,gap} of clear){
-  if((Math.abs(gap-nominal)<.2&&a.spread+b.spread<.2)||Math.abs(gap-nominal)+(a.spread+b.spread)/2>nominal*.25||
+  if(protectedRooms?.has(a.id)||protectedRooms?.has(b.id)||gap<EPSILON)continue;
+  if((Math.abs(gap-nominal)<(protectedRooms?EPSILON:.2)&&a.spread+b.spread<.2)||Math.abs(gap-nominal)+(a.spread+b.spread)/2>nominal*(protectedRooms ? .4 : .25)||
      [...keys(a),...keys(b)].some(key=>used.has(key)))continue;
   const delta=(b.offset-a.offset-nominal*Math.sign(b.offset-a.offset))/2;
   const move=(rooms:PlanShape[],face:typeof a,offset:number)=>{
    const room=rooms.find(r=>r.id===face.id)!;
    return changeListingPoints(rooms,room,new Map([face.index,(face.index+1)%room.points.length].map(i=>{
     const point:Point=[...room.points[i]!];point[face.axis]=offset;return [i,point];
-   })));
+   })),!!protectedRooms);
   };
   const first=move(result,a,a.offset+delta);if(!first)continue;
   const step=result.map(room=>room.id===first.id?first:room);
@@ -536,7 +579,7 @@ export function suggestInternalWallThickness(drawing:PlanShape[]){
  return adjusted?{drawing:result,adjusted,nominal}:null;
 }
 
-function changeListingPoints(drawing:PlanShape[],room:PlanShape,changes:Map<number,Point>){
+function changeListingPoints(drawing:PlanShape[],room:PlanShape,changes:Map<number,Point>,preserveShared=false){
  const points=room.points.map((current,i)=>changes.get(i)??current);
  const before=edges(room.points),after=edges(points);
  const affected=new Set([...changes.keys()].flatMap(i=>[(i+points.length-1)%points.length,i]));
@@ -546,7 +589,11 @@ function changeListingPoints(drawing:PlanShape[],room:PlanShape,changes:Map<numb
   const edge=after[i]!;
   return samePoint(...edge)||after.some((other,j)=>i!==j&&segmentsConflict(edge,other))||
    room.holes.some(hole=>edges(hole).some(other=>segmentsConflict(edge,other)))||
-   neighbours.some(other=>edges(other.points).some(side=>segmentsConflict(edge,side)&&!segmentsConflict(before[i]!,side)));
+   neighbours.some(other=>edges(other.points).some(side=>{
+    const prior=before[i]!,overlapped=segmentsConflict(prior,side);
+    const shared=overlapped&&side.every(point=>Math.abs(cross(...prior,point))<EPSILON);
+    return (preserveShared&&shared&&(!samePoint(edge[0],prior[0])||!samePoint(edge[1],prior[1])))||segmentsConflict(edge,side)&&!overlapped;
+   }));
  }))return null;
  if(room.holes.some(hole=>hole.some(p=>!insideShape(p,{points,holes:[]}))))return null;
  if(neighbours.some(other=>other.kind!=='excluded'&&(
