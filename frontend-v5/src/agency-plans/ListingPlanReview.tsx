@@ -14,8 +14,8 @@ type Draft=ListingPlanDraft;
 type WallProposal=Awaited<ReturnType<typeof proposeSharedPlanWalls>>;
 type ReviewedBand={wall:WallProposal['walls'][number];status:WallReview['status'];axis?:[Point,Point]};
 type Row={opening:ListingOpening;confirmed:boolean};
-type Subject={room:string;vertex:number}|{room:string;edge:number}|{row:number;part:'body'|'start'|'end'};
-type RoomSubject=Extract<Subject,{room:string}>;
+type RoomSubject={room:string;perimeter?:true}&({vertex:number}|{edge:number});
+type Subject=RoomSubject|{row:number;part:'body'|'start'|'end'};
 type Drag={id:number;origin:Point;point:Point;unitsPerPixel:number;shift:boolean;subject:Subject};
 type Props={editPlan?:boolean;saveError?:string;sourceUrl:string;width:number;height:number;rooms:PlanShape[];saved?:ListingDetails;
  wallReviews?:WallReview[];perimeter?:GrossOutline|null;onSavePerimeter?:(shape:PlanShape,onSaved:()=>void)=>void;
@@ -33,6 +33,7 @@ export function ListingPlanReview(p:Props){
  const [perimeterDraft,setPerimeterDraft]=useState<PlanShape|null>(null);
  const [drawingPerimeter,setDrawingPerimeter]=useState(false);
  const [showPerimeter,setShowPerimeter]=useState(true);
+ const [editingPerimeter,setEditingPerimeter]=useState(false);
  const perimeter=perimeterDraft??p.perimeter?.shape;
  const perimeterPending=!!perimeterDraft||p.perimeter?.status==='proposed';
  const [roomId,setRoom]=useState('');
@@ -106,10 +107,12 @@ export function ListingPlanReview(p:Props){
  const framePoints=p.rooms.flatMap(room=>room.points).concat(perimeter?.points??[]);
  const xs=framePoints.map(([x])=>x),ys=framePoints.map(([,y])=>y);
  const span=Math.max(1,Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
- const padding=span*.07;
+ const padding=span*(editingPerimeter ? .15 : .07);
  const left=xs.length?Math.max(0,Math.min(...xs)-padding):0,top=ys.length?Math.max(0,Math.min(...ys)-padding):0;
  const right=xs.length?Math.min(p.width,Math.max(...xs)+padding):p.width,bottom=ys.length?Math.min(p.height,Math.max(...ys)+padding):p.height;
  const activeRoom=drawing.find(room=>room.id===roomId),active=rows[selected];
+ const activeShape=editingPerimeter?perimeter:activeRoom;
+ const perimeterSubject=editingPerimeter?{perimeter:true as const}:{};
  const pending=rows.flatMap((row,i)=>row.confirmed?[]:[i]);
  const busy=p.disabled||working||readingReference;
  const shownOpening=(row:Row)=>listingOpeningOnDrawing(row.opening,walls,span);
@@ -120,7 +123,7 @@ export function ListingPlanReview(p:Props){
   const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
   return calibrating?[Math.max(0,Math.min(p.width,point.x)),Math.max(0,Math.min(p.height,point.y))] as Point:clamp(point.x,point.y);
  }
- function chooseOpening(index:number){setSelected(index);setRoom('');setNotice('');}
+ function chooseOpening(index:number){setSelected(index);setRoom('');setEditingPerimeter(false);setNotice('');}
  function focusOpening(index:number){
   chooseOpening(index);
   const matrix=mapRef.current?.getScreenCTM?.(),viewport=scrollRef.current,row=rows[index];
@@ -185,11 +188,12 @@ export function ListingPlanReview(p:Props){
  function roomEdit(subject:RoomSubject,point:Point,origin:Point,snap=0){
   const delta:Point=[point[0]-origin[0],point[1]-origin[1]];
   if(Math.hypot(...delta)<.001)return null;
-  const room=drawing.find(room=>room.id===subject.room);
+  const room=subject.perimeter?perimeter:drawing.find(room=>room.id===subject.room);
   if(!room)return null;
+  const editable=subject.perimeter?[room]:drawing;
   const after='edge' in subject
-   ?moveListingWall(drawing,room.id,subject.edge,delta)
-   :changeListingVertex(drawing,room.id,subject.vertex,clamp(
+   ?moveListingWall(editable,room.id,subject.edge,delta)
+   :changeListingVertex(editable,room.id,subject.vertex,clamp(
     room.points[subject.vertex]![0]+delta[0],room.points[subject.vertex]![1]+delta[1],
    ),snap);
   return after?.points.every(([x,y])=>x>=left&&x<=right&&y>=top&&y<=bottom)?after:null;
@@ -199,8 +203,10 @@ export function ListingPlanReview(p:Props){
  }
  function apply(subject:Subject,point:Point,origin:Point,snap=0){
   if('room' in subject){
-   const before=drawing.find(room=>room.id===subject.room),after=roomEdit(subject,point,origin,snap);
-   if(!before||!after){setNotice('Lo spostamento uscirebbe dalla mappa o incrocerebbe un contorno.');return;}
+   const after=roomEdit(subject,point,origin,snap);
+   if(!after){setNotice('Lo spostamento uscirebbe dalla mappa o incrocerebbe un contorno.');return;}
+   if(subject.perimeter){setPerimeterDraft(after);setNotice('');return;}
+   const before=drawing.find(room=>room.id===subject.room)!;
    const next=[...contours.filter(c=>c.id!==after.id),{id:after.id,geometry:{points:after.points,holes:after.holes}}];
    if(next.reduce((sum,{geometry})=>sum+geometry.points.length+geometry.holes.reduce((n,ring)=>n+ring.length,0),0)>4096){setNotice('Limite di punti modificabili raggiunto.');return;}
    setContours(next);
@@ -241,8 +247,11 @@ export function ListingPlanReview(p:Props){
   apply(subject,clamp(point[0]+step*direction[0],point[1]+step*direction[1]),point);
  }
  const draggedOpening=drag&&'row' in drag.subject?editedOpening(drag.subject.row,drag.subject.part,drag.point):null;
- const draggedRoom=drag&&'room' in drag.subject
+ const draggedShape=drag&&'room' in drag.subject
   ?roomEdit(drag.subject,drag.point,drag.origin,snapDistance(drag.unitsPerPixel,drag.shift)):null;
+ const draggingPerimeter=!!(drag&&'room' in drag.subject&&drag.subject.perimeter);
+ const draggedRoom=draggingPerimeter?null:draggedShape;
+ const previewPerimeter=(draggingPerimeter?draggedShape:null)??perimeter;
  const previewDrawing=wallProposal?drawing.map(room=>wallProposal.rooms.find(next=>next.id===room.id)??room)
   :draggedRoom?drawing.map(room=>room.id===draggedRoom.id?draggedRoom:room):drawing;
  const editedAxis:[Point,Point]|undefined=wallEdit?.length===2?[wallEdit[0]!,wallEdit[1]!]:undefined;
@@ -256,8 +265,8 @@ export function ListingPlanReview(p:Props){
   ...(wallProposal?.walls??[]).map(wall=>({wall,axis:undefined,pending:undefined,confirmed:false})),
   ...(wallProposal?.unchecked??[]).map((wall,index)=>({wall,axis:index===selectedWall?editedAxis:undefined,pending:index,confirmed:false})),
  ];
- const guides=drag&&'room' in drag.subject&&activeRoom&&draggedRoom
-  ?listingAlignmentGuides(drawing,activeRoom,draggedRoom,drag.subject,2*drag.unitsPerPixel):[];
+ const guides=drag&&'room' in drag.subject&&activeShape&&draggedShape
+  ?listingAlignmentGuides(draggingPerimeter&&perimeter?[...drawing,perimeter]:drawing,activeShape,draggedShape,drag.subject,2*drag.unitsPerPixel):[];
  function previewOpening(row:Row){
   const opening=shownOpening(row);
   return draggedRoom&&activeRoom?carryListingOpening(opening,activeRoom,draggedRoom):opening;
@@ -267,10 +276,12 @@ export function ListingPlanReview(p:Props){
    className={styles.listingHandle} onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,point,subject)}/>;
  }
  function activate(event:KeyboardEvent<SVGElement>,select:()=>void){if(event.key==='Enter'||event.key===' '){event.preventDefault();select();}}
- function chooseRoom(id:string){if(tool==='select'&&!busy){setRoom(id);setSelected(-1);setNotice('');}}
+ function chooseRoom(id:string){if(tool==='select'&&!busy){setRoom(id);setEditingPerimeter(false);setSelected(-1);setNotice('');}}
+ function choosePerimeter(){setRoom('');setSelected(-1);setEditingPerimeter(true);setShowPerimeter(true);setNotice('');}
  function pickTool(next:typeof tool){
   if(wallProposal)return;
   if(next==='scale'){setReferencePoints([]);setReferenceMetres('');setZoom(1);}
+  if(next!=='select')setEditingPerimeter(false);
   setManualDoor(false);setTool(next);setStart(null);setNotice('');if(next!=='select'&&next!=='wall'){setRoom('');setSelected(-1);}}
  function applyReference(){
   if(!validReference)return;
@@ -362,13 +373,14 @@ export function ListingPlanReview(p:Props){
    <button type="button" disabled={busy||tool==='wall'} onClick={()=>void detect()}>{working?'Ricerca in corso…':'Cerca porte e finestre'}</button>
    {p.editPlan?<button type="button" disabled={busy||tool!=='select'||isDragging} onClick={()=>void reviewWalls()}>Proponi pareti comuni</button>:<button type="button" disabled={busy||tool!=='select'||isDragging} onClick={suggestWalls}>Uniforma muri interni</button>}
    {p.onSavePerimeter&&<button type="button" disabled={busy||tool!=='select'||isDragging||!!perimeterDraft} onClick={()=>setDrawingPerimeter(true)}>{perimeter?'Ridisegna perimetro':'Disegna muri perimetrali'}</button>}
-   {perimeter&&<label><input type="checkbox" checked={showPerimeter} onChange={e=>setShowPerimeter(e.target.checked)}/> Muri perimetrali</label>}
+   {perimeter&&p.onSavePerimeter&&<button type="button" disabled={busy||tool!=='select'||isDragging} aria-pressed={editingPerimeter} onClick={()=>{if(editingPerimeter)setEditingPerimeter(false);else choosePerimeter();}}>Modifica perimetro</button>}
+   {perimeter&&<label><input type="checkbox" checked={showPerimeter} disabled={isDragging} onChange={e=>{setShowPerimeter(e.target.checked);if(!e.target.checked)setEditingPerimeter(false);}}/> Muri perimetrali</label>}
    <label><input type="checkbox" checked={ortho} disabled={busy||!!drag} onChange={e=>setOrtho(e.target.checked)}/> Orto <kbd>Shift</kbd></label>
    <label><input type="checkbox" checked={original} disabled={tool==='wall'} onChange={e=>setOriginal(e.target.checked)}/> Mostra originale</label>
    <label>Zoom <input aria-label="Zoom pianta" type="range" min="1" max={MAX_PLAN_ZOOM} step=".25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/></label>
   </div>
   <div className={styles.listingReviewControls} aria-live="polite">
-   {perimeterDraft&&<span>Perimetro ricalcato. Salvalo per aggiornare il contorno lordo.</span>}
+   {perimeterDraft&&<span>Perimetro modificato. Salvalo per aggiornare il contorno lordo.</span>}
    {tool==='wall'?<>
     {wallProposal&&<>
      {wallProposal.walls.length>0&&<strong>{wallProposal.walls.length} {wallProposal.walls.length===1?'parete comune riconosciuta':'pareti comuni riconosciute'}</strong>}
@@ -406,7 +418,7 @@ export function ListingPlanReview(p:Props){
     {!active.confirmed&&<button type="button" disabled={busy} onClick={()=>setRows(rows.map((row,i)=>i===selected?{...row,confirmed:true}:row))}>Conferma</button>}
     <label>Tipo <select value={active.opening.kind} disabled={busy} onChange={e=>writeOpening(selected,{...active.opening,kind:e.target.value as ListingOpening['kind']})}><option value="door">Porta</option><option value="window">Finestra</option></select></label>
     <button type="button" disabled={busy} onClick={()=>{setRows(rows.filter((_,i)=>i!==selected));setSelected(-1);}}>Scarta</button>
-   </>:<span>{activeRoom?activeRoom.label+' · Trascina un lato per spostare la parete o un punto per correggere il contorno.'+(ortho?' Orto allinea i punti vicini in orizzontale o verticale.':''):'Seleziona un vano per spostare pareti e punti, oppure fai clic su un’apertura.'}</span>}
+   </>:<span>{activeShape?activeShape.label+' · Trascina un lato per spostare la parete o un punto per correggere il contorno.'+(ortho?' Orto allinea i punti vicini in orizzontale o verticale.':''):'Seleziona un vano per spostare pareti e punti, oppure fai clic su un’apertura.'}</span>}
    {pending.length>0&&tool==='select'&&<button type="button" disabled={busy} onClick={()=>focusOpening(pending.find(i=>i>selected)??pending[0]!)}>Prossima da verificare · {pending.length}</button>}
    {!calibrating&&doorScale&&<span>{manualScale?'Nuova scala · salva i dettagli per conservarla':p.metresPerPixel?p.scaleLabel??'Scala salvata':'Scala da barra metrica'}</span>}
    {notice&&<span role="status">{notice}</span>}
@@ -432,18 +444,18 @@ export function ListingPlanReview(p:Props){
     return <text key={room.id} x={(Math.min(...xs)+Math.max(...xs))/2} y={(Math.min(...ys)+Math.max(...ys))/2}
      fontSize={span/45} textAnchor="middle" pointerEvents="none">{room.label}</text>;
    })}
-   {tool==='select'&&activeRoom&&!busy&&(draggedRoom??activeRoom).points.map((a,i,points)=>{
+   {tool==='select'&&activeShape&&!busy&&(draggedShape??activeShape).points.map((a,i,points)=>{
     const b=points[(i+1)%points.length]!;
-    const subject={room:activeRoom.id,edge:i};
+    const subject={room:activeShape.id,edge:i,...perimeterSubject};
     const draggingWall=drag&&'edge' in drag.subject&&drag.subject.edge===i;
     return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} strokeWidth="16" vectorEffect="non-scaling-stroke"
      className={styles.listingWallHit} data-moving={draggingWall?'true':undefined} role="button" tabIndex={0}
-     aria-label={`Parete ${i+1} · ${activeRoom.label}`}
+     aria-label={`Parete ${i+1} · ${activeShape.label}`}
      onPointerDown={e=>begin(e,subject)} onKeyDown={e=>arrow(e,mid(a,b),subject)}/>;
    })}
    {wallBands.length>0&&!calibrating&&<g aria-label="Pareti comuni sulla tavola" pointerEvents="none"
     fill={wallProposal?'#be6618':'#005867'} stroke={wallProposal?'#be6618':'#005867'} opacity={1} strokeWidth={wallProposal?2:6}>
-    {joinedSharedWallBands(previewDrawing,wallBands.map(item=>item.wall),showPerimeter?perimeter:undefined,wallBands.map(item=>item.axis)).map((band,i)=>{
+    {joinedSharedWallBands(previewDrawing,wallBands.map(item=>item.wall),showPerimeter?previewPerimeter:undefined,wallBands.map(item=>item.axis)).map((band,i)=>{
      const {pending,confirmed,wall}=wallBands[i]!;
      const unchecked=pending!==undefined;
      const canSelect=unchecked&&!busy&&(!wallEdit||!!editedAxis);
@@ -458,9 +470,11 @@ export function ListingPlanReview(p:Props){
       onKeyDown={canSelect&&!isSelected?e=>activate(e,()=>selectWall(pending)):undefined}/>;
     })}
    </g>}
-   {showPerimeter&&perimeter&&!calibrating&&<path aria-label={perimeterDraft?'Muri perimetrali in bozza':perimeterPending?'Muri perimetrali proposti':'Muri perimetrali salvati'}
-    d={path(perimeter)} fill="none" stroke={perimeterPending?'#be6618':'#173957'} strokeWidth={perimeterPending?4:11}
-    strokeDasharray={perimeterPending?'7 4':undefined} strokeLinejoin="round" vectorEffect="non-scaling-stroke" pointerEvents="none"/>}
+   {showPerimeter&&previewPerimeter&&!calibrating&&<path aria-label={perimeterDraft?'Muri perimetrali in bozza':perimeterPending?'Muri perimetrali proposti':'Muri perimetrali salvati'}
+    d={path(previewPerimeter)} fill="none" stroke={editingPerimeter?'#00819a':perimeterPending?'#be6618':'#173957'} strokeWidth={perimeterPending?4:11}
+    strokeDasharray={perimeterPending?'7 4':undefined} strokeLinejoin="round" vectorEffect="non-scaling-stroke"
+    pointerEvents={p.onSavePerimeter&&tool==='select'&&!busy&&!editingPerimeter?'stroke':'none'}
+    onClick={p.onSavePerimeter&&tool==='select'&&!busy&&!editingPerimeter?choosePerimeter:undefined}/>}
    {tool==='select'&&rows.map((row,i)=>{
     const opening=selected===i&&draggedOpening?draggedOpening:previewOpening(row);
     const {start:a,end:b,kind}=opening;
@@ -485,7 +499,7 @@ export function ListingPlanReview(p:Props){
     {guides.map(([a,b],i)=><line key={i} className={styles.listingAlignmentGuide}
      x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} vectorEffect="non-scaling-stroke"/>)}
    </g>
-   {tool==='select'&&activeRoom&&(draggedRoom??activeRoom).points.map((point,i)=>handle(point,`Punto ${i+1} · ${activeRoom.label}`,{room:activeRoom.id,vertex:i}))}
+   {tool==='select'&&activeShape&&(draggedShape??activeShape).points.map((point,i)=>handle(point,`Punto ${i+1} · ${activeShape.label}`,{room:activeShape.id,vertex:i,...perimeterSubject}))}
    {tool==='select'&&shown&&(['start','end'] as const).map((part,i)=>handle(shown[part],`Estremo ${i+1} dell’apertura`,{row:selected,part}))}
    {calibrating&&<g aria-hidden="true" pointerEvents="none">
     {referencePoints.length===2&&<line x1={referencePoints[0]![0]} y1={referencePoints[0]![1]}
@@ -499,7 +513,7 @@ export function ListingPlanReview(p:Props){
   <div className={styles.listingReviewFooter}>
    <span>{rows.length-pending.length} aperture confermate{pending.length>0?' · le proposte non confermate non compaiono nel PNG':''}</span>
    {perimeterDraft&&<>
-    <button type="button" disabled={busy||tool!=='select'||isDragging} onClick={()=>setPerimeterDraft(null)}>Scarta perimetro</button>
+    <button type="button" disabled={busy||tool!=='select'||isDragging} onClick={()=>setPerimeterDraft(null)}>Scarta modifiche al perimetro</button>
     <button type="button" disabled={busy||tool!=='select'||isDragging} onClick={()=>p.onSavePerimeter?.(perimeterDraft,()=>{setPerimeterDraft(null);setNotice('Perimetro salvato nella pratica.');})}>Salva perimetro</button>
    </>}
    <button type="button" onClick={p.onClose}>Chiudi</button>
@@ -509,7 +523,7 @@ export function ListingPlanReview(p:Props){
  {drawingPerimeter&&<PolygonBuilder sourceUrl={p.sourceUrl} width={p.width} height={p.height} initial={null} graphical
   referenceShapes={perimeter?[...drawing,perimeter]:drawing} onCancel={()=>setDrawingPerimeter(false)} onDone={shape=>{
    setPerimeterDraft({...shape,id:'gross',label:'Perimetro lordo',holes:perimeter?.holes??[]});
-   setShowPerimeter(true);
+   choosePerimeter();
    setDrawingPerimeter(false);
   }}/>}
  </>;

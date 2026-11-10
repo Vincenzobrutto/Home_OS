@@ -147,6 +147,29 @@ it('restores a corrected wall and respects a saved discard on a new scan',async(
  expect(reopened.querySelectorAll('polygon')).toHaveLength(1);
 });
 
+it('edits a saved perimeter with Shift and parallel wall translation, then saves only the outline',()=>{
+ const gross:PlanShape={id:'gross',label:'Perimetro lordo',points:[[20,20],[100,20],[100,80],[20,80]],holes:[]};
+ const onSavePerimeter=vi.fn(),onApply=vi.fn();
+ render(<ListingPlanReview editPlan sourceUrl="/plan.png" width={120} height={100} rooms={[]}
+  perimeter={{shape:gross,status:'saved'}} disabled={false} onClose={()=>{}} onApply={onApply} onSavePerimeter={onSavePerimeter}/>);
+ const map=planMap(true);
+ fireEvent.click(screen.getByLabelText('Muri perimetrali salvati'));
+ expect(screen.getByRole('button',{name:'Modifica perimetro'})).toHaveAttribute('aria-pressed','true');
+ const point=screen.getByRole('button',{name:'Punto 1 · Perimetro lordo'});
+ fireEvent.pointerDown(point,{button:0,pointerId:1,clientX:20,clientY:20});
+ fireEvent.pointerMove(map,{pointerId:1,clientX:16,clientY:35,shiftKey:true});
+ fireEvent.pointerUp(map,{pointerId:1,clientX:16,clientY:35,shiftKey:true});
+ expect(screen.getByLabelText('Muri perimetrali in bozza')).toHaveAttribute('d',expect.stringContaining('M 20 35'));
+ const wall=screen.getByRole('button',{name:'Parete 2 · Perimetro lordo'});
+ fireEvent.pointerDown(wall,{button:0,pointerId:2,clientX:100,clientY:50});
+ fireEvent.pointerMove(map,{pointerId:2,clientX:104,clientY:50});
+ fireEvent.pointerUp(map,{pointerId:2,clientX:104,clientY:50});
+ expect(onSavePerimeter).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'Salva perimetro'}));
+ expect(onSavePerimeter).toHaveBeenCalledWith({...gross,points:[[20,35],[104,20],[104,80],[20,80]]},expect.any(Function));
+ expect(onApply).not.toHaveBeenCalled();
+});
+
 it('sets a manual scale on the full original and saves it with the new door',()=>{
  const rooms:PlanShape[]=[{id:'room',label:'Soggiorno',points:[[10,10],[80,10],[80,80],[10,80]],holes:[]}];
  const onApply=vi.fn();
