@@ -273,6 +273,31 @@ it('adds cellar and balcony contours from the calculation and shows their weight
  expect(summary).toHaveTextContent('Totale stimato130,0 m²');
 });
 
+it('points to the existing balcony when the drawn area duplicates it',async()=>{
+ const state=plans(),plan=state.plans[0]!;
+ plan.mainPerimeter={points:shape.points,holes:[]};
+ plan.rooms=[shape,{id:'b',label:'Balcone esistente',kind:'balcony',points:[[12,0],[17,0],[17,10],[12,10]],holes:[]}];
+ const api={...port(),preview:vi.fn<NonNullable<AgencyPlanPort['preview']>>()};
+ api.plans.mockResolvedValue(state);
+ render(<AgencyPracticePlanWorkspace api={api} scopeKey="duplicate-area" embedded/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Aggiungi area al calcolo'}));
+ fireEvent.change(screen.getByLabelText('Tipo di area'),{target:{value:'balcony'}});
+ fireEvent.click(screen.getByRole('button',{name:'Disegna contorno'}));
+ fireEvent.click(screen.getByText('Coordinate (facoltative)'));
+ for(const [x,y] of [[12,0],[17,0],[17,10],[12,10]]){
+  fireEvent.change(screen.getByLabelText('Nuovo vertice X'),{target:{value:x}});
+  fireEvent.change(screen.getByLabelText('Nuovo vertice Y'),{target:{value:y}});
+  fireEvent.click(screen.getByRole('button',{name:'Aggiungi vertice'}));
+ }
+ fireEvent.click(screen.getByRole('button',{name:'Usa questo contorno'}));
+ expect(screen.getByText(/Il nuovo contorno si sovrappone a «Balcone esistente»/)).toBeVisible();
+ expect(screen.getByRole('button',{name:'Aggiungi alla stima'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('button',{name:'Usa «Balcone esistente» già presente'}));
+ expect(screen.getByTestId('shape-b')).toHaveAttribute('data-selected','true');
+ expect(api.preview).not.toHaveBeenCalled();
+ expect(api.edit).not.toHaveBeenCalled();
+});
+
 it('opens a ready plan on the calculation, with saved balcony cover and sheet scale restored',async()=>{
  const api=port(),state=plans(),plan=state.plans[0]!;
  plan.rasterSize={width:210,height:297};
