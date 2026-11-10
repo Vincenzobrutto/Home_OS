@@ -1,4 +1,5 @@
 import {useEffect,useState,type ReactNode} from 'react';
+import {createPortal} from 'react-dom';
 import type {BalconyCover,QuickEstimate,QuickEstimateInput,QuickEstimateScale} from './api';
 import type {Point,PlanShape} from './PlanMeasurementView';
 import type {MeasurementConfiguration} from './measurement-types';
@@ -15,7 +16,7 @@ type Props={
  balconyCovers?:BalconyCover[];saved?:QuickEstimate|null;geometryRevision?:number;configuration?:MeasurementConfiguration|null;
  busy:boolean;selection:ScaleSelection;onSelection:(selection:ScaleSelection)=>void;
  requestSegment:(done:(a:Point,b:Point)=>void)=>void;
- onSave:(payload:QuickEstimateInput)=>void;
+ onSave:(payload:QuickEstimateInput)=>void;hasOutlineChanges?:boolean;toolbarSaveHost?:HTMLElement|null;
  onFocus:(id:string)=>void;onReviewOverlap?:(id:string)=>void;onDrawPerimeter?:()=>void;
  advanced:ReactNode;
 };
@@ -111,13 +112,20 @@ export function QuickSurfaceEstimate(p:Props){
   ...(p.saved&&p.geometryRevision!==undefined&&p.saved.geometryRevision!==p.geometryRevision?['contorni aggiornati']:[]),
   ...(parametersChanged?['parametri di calcolo']:[]),
   ...(p.gross&&p.gross.status!=='saved'?[p.gross.status==='proposed'?'conferma del perimetro':'perimetro corretto']:[]),
+  ...(p.hasOutlineChanges&&p.gross?.status!=='draft'?['contorno corretto']:[]),
   ...(rows.some(row=>row.balcony&&row.type!==row.savedType)?['copertura dei balconi']:[]),
   ...(scaleSignature(scalePayload)!==scaleSignature(savedScale)&&(scalePayload||p.saved)?['scala']:[]),
  ];
  const dirty=pending.length>0||!p.saved;
+ const saveDisabled=p.busy||!dirty||unconfirmedRatio||!!scaleError;
+ const save=()=>p.onSave({covers:coverPayload,parameters,...(scalePayload?{scale:scalePayload}:{})});
  const savedAt=p.saved?new Date(p.saved.savedAt).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'}):'';
 
  return <section className={styles.surfacePanel} aria-label="Calcola superfici">
+  {p.toolbarSaveHost&&createPortal(<>
+   <button type="button" className={styles.primaryButton} disabled={saveDisabled} onClick={save}>Salva modifiche</button>
+   {(unconfirmedRatio||scaleError)&&<span className={styles.muted}>Verifica la scala prima di salvare.</span>}
+  </>,p.toolbarSaveHost)}
   <div className={styles.estimateCard} aria-label="Stima della superficie commerciale" role="group">
    <dl className={styles.estimateRows}>
     <div><dt>Appartamento<small>{p.gross?p.gross.status==='proposed'?'Perimetro lordo proposto':p.gross.status==='draft'?'Perimetro lordo in modifica':'Perimetro lordo':`Somma dei vani + ${wallPercent}% per i muri`}</small></dt><dd>{hasScale?number(gross)+' m²':'—'}</dd></div>
@@ -134,7 +142,7 @@ export function QuickSurfaceEstimate(p:Props){
     </div>)}
    </div>}
    <div className={styles.saveRow}>
-    <button type="button" className={styles.primaryButton} disabled={p.busy||!dirty||unconfirmedRatio||!!scaleError} onClick={()=>p.onSave({covers:coverPayload,parameters,...(scalePayload?{scale:scalePayload}:{})})}>{p.saved&&!dirty?'Stima salvata':'Salva stima'}</button>
+    <button type="button" className={styles.primaryButton} disabled={saveDisabled} onClick={save}>{p.saved&&!dirty?'Stima salvata':'Salva stima'}</button>
     <p className={styles.muted}>{dirty?(pending.length?'Da salvare: '+pending.join(', ')+'.':'Stima non ancora salvata nella pratica.'):`Stima salvata il ${savedAt}. Si ricalcola dai contorni attuali.`} Stima sul documento, non computo dettagliato né misura certificata.</p>
    </div>
   </div>

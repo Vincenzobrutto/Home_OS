@@ -6,6 +6,7 @@
 .controls[hidden]{display:none}
 .editorToolbar{display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:white;border:1px solid #bcd1cf;border-radius:10px;box-shadow:0 3px 10px #19363e0c}
 .editorToolbar button,.vertexTools button,.zoomTools button{font:inherit;border:1px solid #8caeb0;border-radius:7px;background:white;color:#005767;min-height:44px;padding:8px 12px;cursor:pointer}
+.estimateSaveSlot{display:contents}
 .editorToolbar .saveAction{margin-left:auto;background:#006476;color:#fff;border-color:#006476;font-weight:650}
 .editorToolbar button:disabled,.vertexTools button:disabled,.zoomTools button:disabled{opacity:.5;cursor:default}
 .editHint{margin:10px 0;font-size:14px;color:#45676b}

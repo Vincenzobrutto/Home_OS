@@ -44,6 +44,7 @@ function Workspace(p:WorkspaceProps){
  const [taskChosen,setTaskChosen]=useState(false);
  const [graphics,setGraphics]=useState(false);
  const [toolbarHost,setToolbarHost]=useState<HTMLDivElement|null>(null);
+ const [estimateSaveHost,setEstimateSaveHost]=useState<HTMLSpanElement|null>(null);
  useLayoutEffect(()=>{
   const commands=toolbarHost?.parentElement;
   const editor=commands?.parentElement;
@@ -104,7 +105,7 @@ function Workspace(p:WorkspaceProps){
  function saveEstimate(payload:QuickEstimateInput){
   const editedOutline=draft??(gross?.status==='proposed'?{view:'perimeter',shape:gross.shape}:null);
   const outline=editedOutline?{view:editedOutline.view,id:editedOutline.shape.id,geometry:{points:editedOutline.shape.points,holes:editedOutline.shape.holes}}:undefined;
-  save({operation:'save_quick_estimate',...payload,...(outline?{outline}:{})},'Stima rapida delle superfici');
+  save({operation:'save_quick_estimate',...payload,...(outline?{outline}:{})},'Stima rapida delle superfici',()=>setFocus(null));
  }
  function resolveIssue(issue:{id:string;code:string},resolution:Resolution,reviewReason:string){setFocus(null);save({operation:'resolve_issue',issueId:issue.id,code:issue.code,resolution},reviewReason);}
  function adoptProposal(){if(proposal)save({operation:'apply_surface_proposal',proposalDigest:proposal.digest,...(excludedIds.length?{excludedCandidateIds:excludedIds}:{})});}
@@ -151,7 +152,7 @@ function Workspace(p:WorkspaceProps){
   const switchBlocked=manualOpen||!!builder||!!draft||configDirty||!!pending||busy;
   const accessories=rooms.filter(isAppurtenance),principals=rooms.filter(room=>!isAppurtenance(room));
   const drawStep=!rooms.length?'Aggiungi il primo vano sulla mappa.':entries.length?`Controlla ${entries.length===1?'la verifica aperta':`le ${entries.length} verifiche aperte`}: seleziona una scheda per vedere il punto o il contorno sulla mappa.`:'Nessuna verifica aperta: passa a Calcola superfici.';
-  const measureStep=!gross?(principals.length?'L’appartamento è evidenziato sulla mappa. Puoi disegnare il perimetro lordo per affinare la stima.':'Definisci il perimetro lordo o aggiungi i vani dell’appartamento in Modifica pianta.'):gross.status==='proposed'?'Controlla il perimetro proposto sulla mappa, scegli la copertura dei balconi e premi Salva stima.':gross.status==='draft'?'Perimetro modificato: premi Salva stima per confermarlo.':plan.quickEstimate?'Stima salvata. Selezionando un contorno puoi correggerlo: la stima si aggiorna da sola.':'Scegli la copertura dei balconi e premi Salva stima.';
+  const measureStep=!gross?(principals.length?'L’appartamento è evidenziato sulla mappa. Puoi disegnare il perimetro lordo per affinare la stima.':'Definisci il perimetro lordo o aggiungi i vani dell’appartamento in Modifica pianta.'):gross.status==='proposed'?'Controlla il perimetro proposto sulla mappa, scegli la copertura dei balconi e premi Salva stima.':gross.status==='draft'?'Perimetro modificato: premi Salva modifiche nella barra della mappa.':plan.quickEstimate?'Stima salvata. Selezionando un contorno puoi correggerlo: la stima si aggiorna da sola.':'Scegli la copertura dei balconi e premi Salva stima.';
   const nextStep=task==='draw'?drawStep:task==='measure'?measureStep:'Controlla l’anteprima, conferma che la pianta è completa e scarica l’immagine.';
   const tasks=[['draw','Modifica pianta'],['measure','Calcola superfici'],['listing','Pianta per annuncio']] as const;
   const measuring=task==='measure';
@@ -180,7 +181,7 @@ function Workspace(p:WorkspaceProps){
    onDiscard={()=>{setDraft(null);setError('');}}
    onAddRoom={!measuring&&p.api.preview?()=>setManualOpen(true):undefined}
    onSaveGeometry={measuring?undefined:saveGeometry}
-   toolbarHost={toolbarHost}
+   toolbarHost={toolbarHost} estimateSaveHost={measuring&&draft?setEstimateSaveHost:undefined}
    toolbarActions={measuring?<>
     {p.api.preview&&<button type="button" disabled={scaleBusy} onClick={()=>setManualOpen('estimate')}>Aggiungi area al calcolo</button>}
     {!gross&&<button type="button" disabled={scaleBusy} onClick={createPerimeter}>Disegna perimetro</button>}
@@ -247,7 +248,7 @@ function Workspace(p:WorkspaceProps){
       balconyCovers={plan.balconyCovers} saved={plan.quickEstimate} geometryRevision={plan.geometryRevision} configuration={plan.measurementConfiguration}
       busy={locked||showProposal||!!builder||manualOpen}
       requestSegment={done=>{if(locked||showProposal)return;setBuilder({initial:null,mode:'segment',done:s=>{if(s.points[0]&&s.points[1])done(s.points[0],s.points[1]);}});}}
-      onSave={saveEstimate} onFocus={id=>show(id)}
+      onSave={saveEstimate} hasOutlineChanges={!!draft} toolbarSaveHost={task==='measure'&&draft?estimateSaveHost:null} onFocus={id=>show(id)}
       onReviewOverlap={configDirty||draft?.view==='rooms'?undefined:id=>show('gross',undefined,false,{frameShapeId:id})}
       onDrawPerimeter={createPerimeter}
       advanced={<MeasurementForm key={`${plan.id}:${plan.geometryRevision}:${plan.measurementConfiguration?'configured':'empty'}`} rooms={rooms} rasterSize={rasterSize} hasPerimeter={!!plan.mainPerimeter} configuration={plan.measurementConfiguration} needsRecalculation={!!plan.measurementConfiguration&&!plan.measurement} busy={locked||showProposal||!!draft||!!builder} onDirty={()=>setConfigDirty(true)} requestPolygon={(initial,done)=>polygon(initial,done)} requestSegment={done=>polygon(null,s=>{if(s.points[0]&&s.points[1])done(s.points[0],s.points[1]);},'segment')} onSave={configuration=>save({operation:'measure',configuration})}/>}

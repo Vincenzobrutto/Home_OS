@@ -204,10 +204,15 @@ it('corrects the proposed gross outline on the calculation map and confirms it w
  fireEvent.click(screen.getByRole('button',{name:'Seleziona vano Perimetro lordo proposto'}));
  fireEvent.click(screen.getByRole('button',{name:'Aggiungi punto su un lato'}));
  fireEvent.click(screen.getByRole('button',{name:'Inserisci punto sul lato 1'}));
- expect(screen.getByText('Perimetro modificato: premi Salva stima per confermarlo.')).toBeInTheDocument();
+ expect(screen.getByText('Perimetro modificato: premi Salva modifiche nella barra della mappa.')).toBeInTheDocument();
  expect(screen.getByRole('button',{name:'Modifica pianta'})).toBeDisabled();
- fireEvent.click(screen.getByRole('button',{name:'Salva stima'}));
+ const save=screen.getByRole('button',{name:'Salva modifiche'});
+ expect(screen.getByRole('group',{name:'Strumenti della mappa'})).toContainElement(save);
+ expect(save).toBeEnabled();
+ fireEvent.click(save);
  await screen.findByText('Stima salvata nella pratica.');
+ expect(screen.getByRole('button',{name:'Modifica pianta'})).toBeEnabled();
+ expect(screen.queryByRole('button',{name:'Salva modifiche'})).not.toBeInTheDocument();
  expect(api.edit).toHaveBeenCalledTimes(1);
  expect(api.edit.mock.calls[0]![1]).toMatchObject({expectedRevision:4,expectedPlanVersion:1,command:{operation:'save_quick_estimate',covers:[],outline:{view:'perimeter',id:'gross',geometry:{points:[[0,0],[9,0],[18,0],[18,18],[0,18]],holes:[]}}}});
  expect(screen.queryByText('Ambienti e superfici nette')).not.toBeInTheDocument();

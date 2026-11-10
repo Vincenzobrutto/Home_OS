@@ -8,6 +8,8 @@ Pagina Planimetria riorganizzata su una sola mappa (Modifica pianta, Calcola sup
 
 Nelle verifiche collegate a un vano, **Modifica contorno** apre i vertici modificabili sulla stessa mappa.
 
+Quando un contorno è in bozza in Calcola superfici, Salva modifiche nella barra della mappa registra il contorno e la stima insieme. Dopo la conferma, chiude la selezione e riabilita il cambio di attività.
+
 Sotto Balconi e pertinenze, Misure dell’appartamento mostra il lordo e la sua origine, la somma netta dei vani rilevati e il dettaglio per vano.
 
 Quando il nuovo contorno si sovrappone a un vano esistente, Aggiungi area al calcolo lo indica per nome. Se il vano è una pertinenza, si può tornare al suo contorno già presente. Un rifiuto generico del server indica come rivedere il disegno.
