@@ -1,5 +1,9 @@
 # Stato corrente — Dimora V5, 23 ottobre 2026
 
+## Agenzie — superfici immediate con riferimento automatico, attive localmente
+
+Richiesta del committente: niente form tecnico obbligatorio per ottenere le superfici. Lotto `codex/agency-quick-surfaces-20261105`, checkout separato, basePR82. Riconoscimento locale OCR/pixel della barra e scala, alternativa formato foglio; stima dei soli vani presenti con ipotesi esplicite. Computo rigoroso/salvato conservato nei dettagli opzionali. Solo frontend, nessuna AI esterna o modifica ai dati originali. Codice ba984f6 attivo localmente, API/PG preservati. 93/93 gruppo iniziale, 10/10 finali nei due moduli modificati, typecheck/lint/build e browser desktop375 verdi. Sulla pratica reale rilevata scala1:200, richiesta soltanto formato; nessun salvataggio o invio AI. Stima temporanea non persistita. [Report e limiti](v5/agency-quick-surfaces-20261105.md).
+
 ## Agenzie — semplificazione del disegno planimetria, 5 novembre
 
 Seguito richiesto dal committente nel checkout `work/agency-plan-simple-20261105`, branch `codex/agency-plan-simple-20261105`, dipendente dal lotto PR81. Solo frontend: mappa e salvataggio evidenti, selezione grafica con controlli contestuali, dettagli chiusi e calcolo/annuncio separati. Codice finale72ade15 attivo localmente nel profilo app-agency-plan-simple-final-20261105. 65/65 test del gruppo e32/32 responsive, typecheck/lint/build e browser desktop375 verdi; nessuna scrittura di prova sui dati reali, API/DB invariati. [Report e limiti](v5/agency-plan-simple-20261105.md).

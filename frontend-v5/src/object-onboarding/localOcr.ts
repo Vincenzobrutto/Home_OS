@@ -1,7 +1,7 @@
 import {confidentOcrDatePairs,type PositionedDateEvidence} from './ocrDatePairs';
 import {localBill} from './localBill';
 export const OCR_LIMITS={pages:10,pagePixels:3000000,totalPixels:30000000,totalMs:120000,text:100000};
-export type OcrLine={text:string;confidence:number;words:Array<{text:string;confidence:number}>;bbox?:{x0:number;y0:number;x1:number;y1:number}};
+export type OcrLine={text:string;confidence:number;words:Array<{text:string;confidence:number;bbox?:{x0:number;y0:number;x1:number;y1:number}}>;bbox?:{x0:number;y0:number;x1:number;y1:number}};
 export type OcrPage={blocks?:Array<{paragraphs:Array<{lines:OcrLine[]}>}>|null};
 /** Uncertain tokens become barriers: never repair digits or join around missing text. */
 export function confidentOcrText(data:OcrPage,nativeDates:PositionedDateEvidence[]=[]){
@@ -82,10 +82,9 @@ export class LocalOcr {
   await this.send('setParameters',{params:{tessedit_pageseg_mode:'11'}});
  }
  async recognize(image:Blob,nativeDates:PositionedDateEvidence[]=[]){
-  const bytes=new Uint8Array(await image.arrayBuffer());
-  const data=await this.send('recognize',{image:bytes,options:{},output:{blocks:true,text:false}});
-  return confidentOcrText(data,nativeDates);
+  return confidentOcrText(await this.recognizeLayout(image),nativeDates);
  }
+ async recognizeLayout(image:Blob){const bytes=new Uint8Array(await image.arrayBuffer());return this.send('recognize',{image:bytes,options:{},output:{blocks:true,text:false}});}
  dispose(reason='local_ocr_finished'){
   if(this.dead)return;this.dead=true;this.signal.removeEventListener('abort',this.abort);
   this.worker.terminate();this.pending?.reject(new Error(reason));this.pending=undefined;
